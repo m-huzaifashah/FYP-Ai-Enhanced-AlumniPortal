@@ -1,25 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-type Route = 'dashboard' | 'services' | 'directory' | 'events' | 'jobs' | 'contact'
+type Route = 'dashboard' | 'services' | 'service' | 'directory' | 'events' | 'jobs' | 'contact'
 
-type Service = { id: string; title: string; description: string }
+type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
 type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string }
 type Event = { id: number; title: string; date: string; location: string; description: string }
 type Job = { id: number; title: string; company: string; location: string; link: string }
 
 const SERVICES: Service[] = [
-  { id: 'login', title: 'Login/Registration', description: 'Create your alumni account and sign in.' },
-  { id: 'give-back', title: 'Give Back', description: 'Support scholarships and campus initiatives.' },
-  { id: 'spotlight', title: 'Alumni Spotlight', description: 'Celebrate achievements of Riphah alumni.' },
-  { id: 'jobs', title: 'Job Portal', description: 'Discover jobs and refer opportunities.' },
-  { id: 'snapshot', title: 'Alumni Snapshot', description: 'Explore alumni distribution and stats.' },
-  { id: 'events', title: 'Alumni Events', description: 'Stay updated with meetups and talks.' },
-  { id: 'advantage', title: 'Alumni Advantage', description: 'Exclusive benefits and partnerships.' },
-  { id: 'email', title: 'Email', description: 'Official alumni email resources.' },
-  { id: 'network', title: 'Alumni Network', description: 'Join Riphah alumni communities.' },
-  { id: 'faqs', title: 'FAQs', description: 'Find answers to common questions.' },
-  { id: 'contact', title: 'Contact Us', description: 'Reach the Alumni Relations team.' },
-  { id: 'message-vc', title: 'Message the Vice Chancellor', description: 'Share feedback directly to VC.' }
+  { id: 'login', title: 'Login/Registration', description: 'Create your alumni account and sign in.', category: 'Support' },
+  { id: 'give-back', title: 'Give Back', description: 'Support scholarships and campus initiatives.', category: 'Community' },
+  { id: 'spotlight', title: 'Alumni Spotlight', description: 'Celebrate achievements of Riphah alumni.', category: 'Community' },
+  { id: 'jobs', title: 'Job Portal', description: 'Discover jobs and refer opportunities.', category: 'Career' },
+  { id: 'snapshot', title: 'Alumni Snapshot', description: 'Explore alumni distribution and stats.', category: 'Benefits' },
+  { id: 'events', title: 'Alumni Events', description: 'Stay updated with meetups and talks.', category: 'Community' },
+  { id: 'advantage', title: 'Alumni Advantage', description: 'Exclusive benefits and partnerships.', category: 'Benefits' },
+  { id: 'email', title: 'Email', description: 'Official alumni email resources.', category: 'Support' },
+  { id: 'network', title: 'Alumni Network', description: 'Join Riphah alumni communities.', category: 'Community' },
+  { id: 'faqs', title: 'FAQs', description: 'Find answers to common questions.', category: 'Support' },
+  { id: 'contact', title: 'Contact Us', description: 'Reach the Alumni Relations team.', category: 'Support' },
+  { id: 'message-vc', title: 'Message the Vice Chancellor', description: 'Share feedback directly to VC.', category: 'Support' }
 ]
 
 const ALUMNI: Alumni[] = [
@@ -156,6 +156,8 @@ export default function App() {
   const [suError, setSuError] = useState('')
   const [suSuccess, setSuSuccess] = useState('')
   const [svcQuery, setSvcQuery] = useState('')
+  const [svcDetail, setSvcDetail] = useState<Service | null>(null)
+  const [svcCategory, setSvcCategory] = useState<'All' | 'Career' | 'Community' | 'Benefits' | 'Support'>('All')
   const NAV: [Route, string][] = [
     ['dashboard','Dashboard'],
     ['services','Alumni Services'],
@@ -180,11 +182,23 @@ export default function App() {
 
   const servicesFiltered = useMemo(() => {
     const q = svcQuery.trim().toLowerCase()
-    if (!q) return SERVICES
-    return SERVICES.filter(s =>
-      s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
-    )
-  }, [svcQuery])
+    return SERVICES.filter(s => {
+      const matchesText = !q || s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
+      const matchesCat = svcCategory === 'All' || s.category === svcCategory
+      return matchesText && matchesCat
+    })
+  }, [svcQuery, svcCategory])
+
+  const openService = (id: string) => {
+    if (id === 'login') { setLoginOpen(true); return }
+    if (id === 'jobs') { setRoute('jobs'); return }
+    if (id === 'events') { setRoute('events'); return }
+    if (id === 'contact') { setRoute('contact'); return }
+    const s = SERVICES.find(x => x.id === id) || null
+    setSvcDetail(s)
+    setRoute('service')
+  }
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
@@ -225,6 +239,7 @@ export default function App() {
             <section className="space-y-12">
               <div className="rounded-2xl overflow-hidden bg-[#0B4C72] bg-pan">
                 <div className="relative px-8 py-20 text-center">
+                  <img src="https://placehold.co/1200x500/0B4C72/FFFFFF?text=Riphah+Alumni" alt="Alumni" className="absolute inset-0 w-full h-full object-cover opacity-40" />
                   <Reveal>
                     <h1 className="text-4xl md:text-5xl font-extrabold">A New Day At Riphah Meeting the Moment, Together</h1>
                   </Reveal>
@@ -253,7 +268,7 @@ export default function App() {
                   {[{title:'Attend Events',desc:'Stay connected with your alumni community by attending exclusive events designed to inspire, network, and celebrate shared achievements.'},{title:'Advance Your Career',desc:'Take your career to the next level with exclusive resources and opportunities tailored for alumni.'},{title:'Reconnect your Friend',desc:'Rekindle old friendships and create new memories with your alumni network.'}].map((c,i)=> (
                     <Reveal key={i} delay={i*120}>
                       <div className="rounded-2xl border border-slate-800 bg-white/5 p-6 transition-transform duration-300 hover:scale-[1.02]">
-                        <div className="h-40 rounded-lg bg-slate-800/40" />
+                        <img src={`https://placehold.co/600x300/0B4C72/FFFFFF?text=${encodeURIComponent(c.title)}`} alt={c.title} className="h-40 w-full rounded-lg object-cover" />
                         <div className="mt-4 text-xl font-semibold text-white">{c.title}</div>
                         <p className="mt-2 text-sm text-slate-300">{c.desc}</p>
                       </div>
@@ -277,7 +292,9 @@ export default function App() {
                   </div>
                 </Reveal>
                 <Reveal delay={150}>
-                  <div className="rounded-2xl bg-slate-800/40" />
+                  <div className="rounded-2xl overflow-hidden">
+                    <img src="https://placehold.co/800x500/0B4C72/FFFFFF?text=Riphah+Campus" alt="Riphah campus" className="w-full h-64 md:h-full object-cover" />
+                  </div>
                 </Reveal>
               </div>
 
@@ -290,7 +307,7 @@ export default function App() {
                     {[{date:'May 22, 2025', title:'ABC test'},{date:'Dec 31, 2024', title:'Engineer Nabeeha Malik'}].map((s,i)=> (
                       <Reveal key={i} delay={i*120}>
                         <li className="flex items-center gap-4">
-                          <div className="h-16 w-16 rounded-lg bg-white/10" />
+                          <img src="https://placehold.co/96x96/0B4C72/FFFFFF?text=Story" alt="Story" className="h-16 w-16 rounded-lg object-cover" />
                           <div>
                             <div className="text-xs text-slate-300">{s.date}</div>
                             <div className="font-semibold">{s.title}</div>
@@ -349,6 +366,15 @@ export default function App() {
 
               <div className="flex items-center gap-3">
                 <input value={svcQuery} onChange={e=>setSvcQuery(e.target.value)} placeholder="Search services" className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-600" />
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  {(['All','Career','Community','Benefits','Support'] as const).map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setSvcCategory(cat)}
+                      className={(svcCategory===cat ? 'bg-[#0B4C72] text-white' : 'bg-white/5 text-slate-200 hover:bg-white/10') + ' rounded-full px-3 py-1 text-xs'}
+                    >{cat}</button>
+                  ))}
+                </div>
               </div>
 
               <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -363,17 +389,34 @@ export default function App() {
                         <p className="text-sm text-slate-300 mt-1">{s.description}</p>
                         <div className="mt-4 flex items-center gap-2">
                           {s.id==='login' ? (
-                            <button onClick={() => setLoginOpen(true)} className="rounded-md bg-[#D29B2A] hover:bg-[#c18c21] px-3 py-2 text-sm text-slate-900 font-medium">Open</button>
+                            <button onClick={() => openService(s.id)} className="rounded-md bg-[#D29B2A] hover:bg-[#c18c21] px-3 py-2 text-sm text-slate-900 font-medium">Open</button>
                           ) : (
-                            <button className="rounded-md bg-slate-800 px-3 py-2 text-sm">Learn more</button>
+                            <button onClick={() => openService(s.id)} className="rounded-md bg-slate-800 px-3 py-2 text-sm">Learn more</button>
                           )}
-                          <button className="rounded-md px-3 py-2 text-sm bg-white/10">Save</button>
                         </div>
                       </div>
                     </div>
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          {route === 'service' && svcDetail && (
+            <section className="space-y-6">
+              <div className="rounded-2xl overflow-hidden bg-white/5 ring-1 ring-slate-800">
+                <img src={`https://placehold.co/1200x400/0B4C72/FFFFFF?text=${encodeURIComponent(svcDetail.title)}`} alt={svcDetail.title} className="w-full h-56 object-cover" />
+                <div className="p-6">
+                  <div className="text-2xl font-bold text-white">{svcDetail.title}</div>
+                  <p className="mt-2 text-slate-300">{svcDetail.description}</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <button onClick={() => setRoute('services')} className="rounded-md bg-slate-800 px-3 py-2 text-sm">Back to Services</button>
+                    {svcDetail.id==='login' && (
+                      <button onClick={() => setLoginOpen(true)} className="rounded-md bg-[#D29B2A] px-3 py-2 text-sm text-slate-900 font-medium">Open Login</button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </section>
           )}
 
@@ -493,6 +536,8 @@ export default function App() {
           <div className="text-xs text-slate-400 text-center">Already have an account? <button onClick={() => { setSignupOpen(false); setLoginOpen(true) }} className="underline">Login</button></div>
         </div>
       </Modal>
+
+      
 
       <Modal open={contactOpen} onClose={() => setContactOpen(false)} title="Send a Message">
         <div className="space-y-3">
