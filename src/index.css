@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+:root { color-scheme: dark; }
+html, body, #root { height: 100%; }
+
+@keyframes pan {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+.bg-pan {
+  background-image: linear-gradient(90deg, rgba(11,76,114,0.7), rgba(210,155,42,0.35));
+  background-size: 200% 200%;
+  animation: pan 14s linear infinite;
+}
