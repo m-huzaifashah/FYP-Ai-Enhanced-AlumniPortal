@@ -1,5 +1,5 @@
 import React from 'react'
-import { Reveal } from '../ui'
+import { Reveal, IconCard } from '../ui'
 
 type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
 
@@ -18,6 +18,20 @@ export default function Services({
   onCategoryChange: (c: 'All' | 'Career' | 'Community' | 'Benefits' | 'Support') => void
   onOpenService: (id: string) => void
 }) {
+  const SERVICE_IMAGES: Record<string, string> = {
+    login: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    jobs: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    events: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    contact: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    spotlight: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    'give-back': 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    snapshot: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    advantage: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    email: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    network: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    faqs: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    'message-vc': 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+  }
   return (
     <section className="space-y-8">
       <div className="rounded-2xl bg-[#0B4C72] text-white px-6 py-10">
@@ -42,29 +56,13 @@ export default function Services({
         </div>
       </div>
 
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {services.map(s => (
-          <li key={s.id} className="group rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-sm transition hover:shadow-md hover:ring-2 hover:ring-[#0B4C72]">
-            <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#0B4C72] to-[#D29B2A] grid place-items-center text-white">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a5 5 0 015 5v2h1a3 3 0 013 3v7a3 3 0 01-3 3H6a3 3 0 01-3-3v-7a3 3 0 013-3h1V7a5 5 0 015-5zm0 2a3 3 0 00-3 3v2h6V7a3 3 0 00-3-3z"/></svg>
-              </div>
-              <div className="flex-1">
-                <div className="text-base font-semibold">{s.title}</div>
-                <p className="text-sm text-slate-300 mt-1">{s.description}</p>
-                <div className="mt-4 flex items-center gap-2">
-                  {s.id==='login' ? (
-                    <button onClick={() => onOpenService(s.id)} className="rounded-md bg-[#D29B2A] hover:bg-[#c18c21] px-3 py-2 text-sm text-slate-900 font-medium">Open</button>
-                  ) : (
-                    <button onClick={() => onOpenService(s.id)} className="rounded-md bg-slate-800 px-3 py-2 text-sm">Learn more</button>
-                  )}
-                </div>
-              </div>
-            </div>
+          <li key={s.id}>
+            <IconCard title={s.title} src={SERVICE_IMAGES[s.id] || SERVICE_IMAGES.login} onClick={() => onOpenService(s.id)} />
           </li>
         ))}
       </ul>
     </section>
   )
 }
-
