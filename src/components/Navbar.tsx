@@ -17,7 +17,7 @@ function Logo() {
           <div className="text-[#0B4C72] text-sm font-bold">RIU</div>
         )}
       </div>
-      <div className="text-2xl font-semibold">Riphah International University</div>
+      <div className="text-sm font-semibold">Riphah International University</div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-export function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+export function Modal({ open, onClose, title, children, titleClassName = '' }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; titleClassName?: string }) {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50">
@@ -10,7 +10,7 @@ export function Modal({ open, onClose, title, children }: { open: boolean; onClo
           <button aria-label="Close" onClick={onClose} className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-transform duration-200 hover:scale-105">
             <Icon name="close" />
           </button>
-          <div className="text-lg font-semibold pr-10">{title}</div>
+          <div className={`text-lg font-semibold pr-10 ${titleClassName}`}>{title}</div>
           <div className="mt-3">{children}</div>
         </div>
       </div>
