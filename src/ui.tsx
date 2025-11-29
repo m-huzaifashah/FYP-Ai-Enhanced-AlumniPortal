@@ -5,12 +5,12 @@ export function Modal({ open, onClose, title, children, titleClassName = '' }: {
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="absolute inset-0 grid place-items-center p-4">
-        <div className="relative w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6 transition-all duration-300">
+      <div className="absolute inset-0 grid place-items-center p-3 sm:p-4">
+        <div className="relative w-full max-w-[92vw] sm:max-w-md rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6 transition-all duration-300">
           <button aria-label="Close" onClick={onClose} className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-transform duration-200 hover:scale-105">
             <Icon name="close" />
           </button>
-          <div className={`text-lg font-semibold pr-10 ${titleClassName}`}>{title}</div>
+          <div className={`text-base sm:text-lg font-semibold pr-10 ${titleClassName}`}>{title}</div>
           <div className="mt-3">{children}</div>
         </div>
       </div>

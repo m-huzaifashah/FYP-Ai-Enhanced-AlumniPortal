@@ -35,11 +35,43 @@ type Mentor = { id: number; name: string; title: string; company: string; city: 
 
 
 
+const ROUTE_TO_PATH: Record<Route, string> = {
+  dashboard: '/',
+  services: '/services',
+  service: '/service',
+  directory: '/directory',
+  events: '/events',
+  jobs: '/jobs',
+  contact: '/contact',
+  career: '/career',
+  mentorship: '/mentorship',
+  admin: '/admin',
+  signup: '/signup',
+  forgot: '/forgot',
+  profile: '/profile',
+  settings: '/settings',
+}
+const PATH_TO_ROUTE: Record<string, Route> = Object.fromEntries(Object.entries(ROUTE_TO_PATH).map(([k, v]) => [v, k as Route]))
+const NAV_ITEMS: [Route, string][] = [
+  ['dashboard','Dashboard'],
+  ['services','Alumni Services'],
+  ['directory','Directory'],
+  ['events','Events'],
+  ['jobs','Jobs'],
+  ['career','Career Support'],
+  ['mentorship','Mentorship'],
+  ['admin','Admin'],
+  ['contact','Contact']
+]
+const SERVICES_LIST: Service[] = SERVICES as Service[]
+const MENTORS_LIST: Mentor[] = MENTORS as Mentor[]
+
 export default function App() {
   const [state, setState] = useState({
     route: 'dashboard' as Route,
     query: '',
     loginOpen: false,
+    authed: false,
     contactOpen: false,
     signupOpen: false,
     loginEmail: '',
@@ -57,29 +89,13 @@ export default function App() {
   })
   const navigate = useNavigate()
   const location = useLocation()
-  const routeToPath: Record<Route, string> = {
-    dashboard: '/',
-    services: '/services',
-    service: '/service',
-    directory: '/directory',
-    events: '/events',
-    jobs: '/jobs',
-    contact: '/contact',
-    career: '/career',
-    mentorship: '/mentorship',
-    admin: '/admin',
-    signup: '/signup',
-    forgot: '/forgot',
-    profile: '/profile',
-    settings: '/settings',
-  }
-  const pathToRoute: Record<string, Route> = Object.fromEntries(Object.entries(routeToPath).map(([k, v]) => [v, k as Route]))
-  const currentRoute: Route = pathToRoute[location.pathname] ?? 'dashboard'
+  const currentRoute: Route = PATH_TO_ROUTE[location.pathname] ?? 'dashboard'
 
   const setRoute = (r: Route) => {
     setState(s => ({ ...s, route: r }))
-    const p = routeToPath[r]
+    const p = ROUTE_TO_PATH[r]
     if (p) navigate(p)
+    try { localStorage.setItem('last-route', r) } catch {}
   }
   const setQuery = (v: string) => setState(s => ({ ...s, query: v }))
   const setLoginOpen = (v: boolean) => setState(s => ({ ...s, loginOpen: v }))
@@ -97,17 +113,7 @@ export default function App() {
   const setSvcQuery = (v: string) => setState(s => ({ ...s, svcQuery: v }))
   const setSvcDetail = (d: Service | null) => setState(s => ({ ...s, svcDetail: d }))
   const setSvcCategory = (c: 'All' | 'Career' | 'Community' | 'Benefits' | 'Support') => setState(s => ({ ...s, svcCategory: c }))
-  const NAV: [Route, string][] = [
-    ['dashboard','Dashboard'],
-    ['services','Alumni Services'],
-    ['directory','Directory'],
-    ['events','Events'],
-    ['jobs','Jobs'],
-    ['career','Career Support'],
-    ['mentorship','Mentorship'],
-    ['admin','Admin'],
-    ['contact','Contact']
-  ]
+  
 
   const filtered = useMemo(() => {
     const q = state.query.trim().toLowerCase()
@@ -124,7 +130,7 @@ export default function App() {
 
   const servicesFiltered = useMemo(() => {
     const q = state.svcQuery.trim().toLowerCase()
-    return SERVICES.filter(s => {
+    return SERVICES_LIST.filter(s => {
       const matchesText = !q || s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
       const matchesCat = state.svcCategory === 'All' || s.category === state.svcCategory
       return matchesText && matchesCat
@@ -136,15 +142,15 @@ export default function App() {
     if (id === 'jobs') { setRoute('jobs'); return }
     if (id === 'events') { setRoute('events'); return }
     if (id === 'contact') { setRoute('contact'); return }
-    const s = SERVICES.find(x => x.id === id) || null
-    setSvcDetail(s)
+    const s = SERVICES_LIST.find(x => x.id === id) || null
+    setSvcDetail(s as Service | null)
     setRoute('service')
   }
 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800">
-      <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV as any} />
+      <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV_ITEMS as any} authed={state.authed} onSignOut={() => setState(s => ({ ...s, authed: false }))} />
 
       <div className="mx-auto max-w-7xl">
         <main className="px-4 py-8">
@@ -157,7 +163,7 @@ export default function App() {
               path="/services"
               element={
                 <Services
-                  services={servicesFiltered as Service[]}
+                  services={servicesFiltered}
                   query={state.svcQuery}
                   onQueryChange={setSvcQuery}
                   category={state.svcCategory}
@@ -177,7 +183,7 @@ export default function App() {
                   />
                 ) : (
                   <Services
-                    services={servicesFiltered as Service[]}
+                    services={servicesFiltered}
                     query={state.svcQuery}
                     onQueryChange={setSvcQuery}
                     category={state.svcCategory}
@@ -206,7 +212,7 @@ export default function App() {
                 />
               }
             />
-            <Route path="/mentorship" element={<Mentorship mentors={MENTORS as Mentor[]} />} />
+            <Route path="/mentorship" element={<Mentorship mentors={MENTORS_LIST} />} />
             <Route path="/admin" element={<Admin events={EVENTS} jobs={JOBS} alumniCount={ALUMNI.length} />} />
             <Route path="/contact" element={<Contact onOpenMessage={() => setContactOpen(true)} />} />
             <Route path="/signup" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
@@ -297,6 +303,7 @@ export default function App() {
         setLoginError={setLoginError}
         onGoForgot={() => { setLoginOpen(false); setRoute('forgot') }}
         onGoSignup={() => { setLoginOpen(false); setRoute('signup') }}
+        onLoggedIn={() => setState(s => ({ ...s, authed: true }))}
       />
 
       <SignupModal

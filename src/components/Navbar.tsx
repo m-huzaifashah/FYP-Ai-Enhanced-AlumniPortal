@@ -41,12 +41,19 @@ function Social() {
   )
 }
 
-export default function Navbar({ route, onNavigate, onOpenLogin, nav }: { route: string; onNavigate: (r: string) => void; onOpenLogin: () => void; nav: [string,string][] }) {
+export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = false, onSignOut }: { route: string; onNavigate: (r: string) => void; onOpenLogin: () => void; nav: [string,string][]; authed?: boolean; onSignOut?: () => void }) {
   const [open, setOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [drawerAnim, setDrawerAnim] = useState(false)
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="mx-auto max-w-7xl h-16 px-6 grid grid-cols-[1fr_auto_1fr] items-center">
-        <div className="flex items-center"><Logo /></div>
+      <div className="mx-auto max-w-7xl h-16 px-3 sm:px-6 grid grid-cols-[auto_1fr_auto] items-center">
+        <div className="flex items-center gap-2">
+          <button aria-label="Menu" onClick={() => { setMobileOpen(true); setTimeout(()=>setDrawerAnim(true),0) }} className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue ring-1 ring-slate-200 text-slate-700 shadow-sm">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
+          </button>
+          <Logo />
+        </div>
         <nav className="hidden md:flex items-center justify-center gap-2">
           {nav.map(([r,label]) => (
             <button
@@ -62,21 +69,64 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav }: { route:
           <IconButton>
             <Icon name="bell" />
           </IconButton>
-          <button onClick={() => setOpen(v=>!v)} className="inline-flex items-center gap-2 rounded-full bg-white ring-1 ring-slate-200 px-2 py-1 shadow-sm">
+          <button onClick={() => setOpen(v=>!v)} className="inline-flex items-center gap-2 rounded-full bg-blue ring-1 ring-slate-200 px-2 py-1 shadow-sm">
             <div className="h-7 w-7 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" />
             <div className="text-sm text-slate-700">Account</div>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="text-slate-500"><path d="M7 10l5 5 5-5H7z"/></svg>
           </button>
-          {open && (
-            <div className="absolute right-0 top-12 w-48 rounded-xl bg-white ring-1 ring-slate-200 shadow-lg">
-              <button onClick={() => { setOpen(false); onOpenLogin() }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Sign In</button>
-              <button onClick={() => { setOpen(false); onNavigate('profile') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Profile</button>
-              <button onClick={() => { setOpen(false); onNavigate('settings') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Settings</button>
-              <button onClick={() => { setOpen(false); onNavigate('dashboard') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Logout</button>
-            </div>
-          )}
+           {open && (
+             <div className="absolute right-0 top-12 w-48 rounded-xl bg-white ring-1 ring-slate-200 shadow-lg">
+               {!authed && (
+                 <button onClick={() => { setOpen(false); onOpenLogin() }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Sign In</button>
+               )}
+               {authed && (
+                 <>
+                   <button onClick={() => { setOpen(false); onNavigate('profile') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Profile</button>
+                   <button onClick={() => { setOpen(false); onNavigate('settings') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Settings</button>
+                   <button onClick={() => { setOpen(false); onSignOut && onSignOut() }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Sign Out</button>
+                 </>
+               )}
+             </div>
+           )}
         </div>
       </div>
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} />
+          <div className={(drawerAnim ? 'translate-x-0' : '-translate-x-full') + ' absolute left-0 top-0 h-full w-72 max-w-[85vw] bg-[#E8F4FF] ring-1 ring-slate-200 shadow-xl p-4 transition-transform duration-300'}>
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold">Menu</div>
+              <button aria-label="Close" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white ring-1 ring-slate-200">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.225 4.811L4.811 6.225 10.586 12l-5.775 5.775 1.414 1.414L12 13.414l5.775 5.775 1.414-1.414L13.414 12l5.775-5.775-1.414-1.414L12 10.586z"/></svg>
+              </button>
+            </div>
+            <ul className="mt-4 space-y-2">
+              {nav.map(([r,label]) => (
+                <li key={r}>
+                  <button onClick={() => { setMobileOpen(false); onNavigate(r) }} className={'w-full text-left rounded-lg px-3 py-2 text-sm ' + (route===r ? 'bg-[#DCEFFF] ring-1 ring-slate-200 text-slate-900' : 'text-slate-800 hover:bg-[#DCEFFF]')}>
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4">
+              {!authed ? (
+                <button onClick={() => { setMobileOpen(false); onOpenLogin() }} className="w-full rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white px-3 py-2 text-sm font-semibold">Sign In</button>
+              ) : (
+                <button onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300); onSignOut && onSignOut() }} className="w-full rounded-lg bg-white ring-1 ring-slate-200 text-slate-800 px-3 py-2 text-sm">Sign Out</button>
+              )}
+            </div>
+            {authed && (
+              <div className="mt-2">
+                <button onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300); onNavigate('profile') }} className="w-full rounded-lg bg-[#DCEFFF] ring-1 ring-slate-200 text-slate-900 px-3 py-2 text-sm">Profile</button>
+              </div>
+            )}
+            <div className="mt-6">
+              <Social />
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
