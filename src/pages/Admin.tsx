@@ -1,17 +1,20 @@
 import React, { useMemo, useState } from 'react'
 import { Button, Card, Counter, Input, Modal } from '../ui'
+import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob } from '../api'
 
-type Event = { id: number; title: string; date: string; location: string; description: string }
-type Job = { id: number; title: string; company: string; location: string; link: string }
+type Event = { id: number | string; title: string; date: string; location: string; description: string }
+type Job = { id: number | string; title: string; company: string; location: string; link: string }
 
-export default function Admin({ events, jobs, alumniCount }: { events: Event[]; jobs: Job[]; alumniCount: number }) {
+export default function Admin({ events, jobs, alumniCount, onEventsChanged }: { events: Event[]; jobs: Job[]; alumniCount: number; onEventsChanged?: (next: Event[]) => void }) {
   const [evs, setEvs] = useState<Event[]>(events)
   const [evOpen, setEvOpen] = useState(false)
-  const [editId, setEditId] = useState<number | null>(null)
+  const [editId, setEditId] = useState<number | string | null>(null)
   const [evTitle, setEvTitle] = useState('')
   const [evDate, setEvDate] = useState('')
   const [evLocation, setEvLocation] = useState('')
   const [evDesc, setEvDesc] = useState('')
+  const [evError, setEvError] = useState('')
+  const [evSaving, setEvSaving] = useState(false)
 
   const [annTitle, setAnnTitle] = useState('')
   const [annBody, setAnnBody] = useState('')
@@ -19,7 +22,11 @@ export default function Admin({ events, jobs, alumniCount }: { events: Event[]; 
 
   const now = useMemo(() => new Date(), [])
   const upcomingCount = useMemo(() => evs.filter(e => new Date(e.date) >= now).length, [evs, now])
-  const jobsCount = jobs.length
+  const [jobsState, setJobsState] = useState<Job[]>(jobs)
+  const jobsCount = jobsState.length
+
+  React.useEffect(() => { setEvs(events) }, [events])
+  React.useEffect(() => { setJobsState(jobs) }, [jobs])
 
   const openCreate = () => {
     setEditId(null)
@@ -39,19 +46,87 @@ export default function Admin({ events, jobs, alumniCount }: { events: Event[]; 
     setEvOpen(true)
   }
 
-  const saveEvent = () => {
-    const ok = evTitle.trim().length >= 2 && /\d{4}-\d{2}-\d{2}/.test(evDate) && evLocation.trim().length >= 2
-    if (!ok) return
-    if (editId == null) {
-      const id = Math.max(0, ...evs.map(x => x.id)) + 1
-      setEvs(prev => [...prev, { id, title: evTitle.trim(), date: evDate, location: evLocation.trim(), description: evDesc.trim() }])
-    } else {
-      setEvs(prev => prev.map(x => x.id === editId ? { ...x, title: evTitle.trim(), date: evDate, location: evLocation.trim(), description: evDesc.trim() } : x))
+  const saveEvent = async () => {
+    setEvError('')
+    const d = new Date(evDate)
+    const ok = evTitle.trim().length >= 2 && !isNaN(d.getTime()) && evLocation.trim().length >= 2
+    if (!ok) { setEvError('Please fill title, a valid date, and location'); return }
+    const dateNorm = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10)
+    setEvSaving(true)
+    try {
+      if (editId == null) {
+        const created = await createEvent({ title: evTitle.trim(), date: dateNorm, location: evLocation.trim(), description: evDesc.trim() })
+        const next = [...evs, created]
+        setEvs(next)
+        onEventsChanged && onEventsChanged(next)
+        try { window.dispatchEvent(new CustomEvent('eventsUpdated')) } catch {}
+      } else {
+        const updated = await updateEvent(editId, { title: evTitle.trim(), date: dateNorm, location: evLocation.trim(), description: evDesc.trim() })
+        const next = evs.map(x => String(x.id) === String(editId) ? updated : x)
+        setEvs(next)
+        onEventsChanged && onEventsChanged(next)
+        try { window.dispatchEvent(new CustomEvent('eventsUpdated')) } catch {}
+      }
+      setEvOpen(false)
+    } catch (e: any) {
+      setEvError(e?.message || 'Failed to save event')
+    } finally {
+      setEvSaving(false)
     }
-    setEvOpen(false)
   }
 
-  const removeEvent = (id: number) => setEvs(prev => prev.filter(x => x.id !== id))
+  const removeEvent = async (id: number | string) => {
+    try { await deleteEvent(id) } catch {}
+    const next = evs.filter(x => String(x.id) !== String(id))
+    setEvs(next)
+    onEventsChanged && onEventsChanged(next)
+    try { window.dispatchEvent(new CustomEvent('eventsUpdated')) } catch {}
+  }
+
+  const [jobOpen, setJobOpen] = useState(false)
+  const [jobEditId, setJobEditId] = useState<number | string | null>(null)
+  const [jobTitle, setJobTitle] = useState('')
+  const [jobCompany, setJobCompany] = useState('')
+  const [jobLocation, setJobLocation] = useState('')
+  const [jobLink, setJobLink] = useState('')
+
+  const openJobCreate = () => {
+    setJobEditId(null)
+    setJobTitle('')
+    setJobCompany('')
+    setJobLocation('')
+    setJobLink('')
+    setJobOpen(true)
+  }
+
+  const openJobEdit = (j: Job) => {
+    setJobEditId(j.id)
+    setJobTitle(j.title)
+    setJobCompany(j.company)
+    setJobLocation(j.location)
+    setJobLink(j.link)
+    setJobOpen(true)
+  }
+
+  const saveJob = async () => {
+    const ok = jobTitle.trim().length >= 2 && jobCompany.trim().length >= 2 && jobLocation.trim().length >= 2
+    if (!ok) return
+    try {
+      if (jobEditId == null) {
+        const created = await createJob({ title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim() })
+        setJobsState(prev => [...prev, created])
+      } else {
+        const updated = await updateJob(jobEditId, { title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim() })
+        setJobsState(prev => prev.map(x => String(x.id) === String(jobEditId) ? updated : x))
+      }
+    } catch {}
+    setJobOpen(false)
+  }
+
+  const removeJob = async (id: number | string) => {
+    try { await deleteJob(id) } catch {}
+    setJobsState(prev => prev.filter(x => String(x.id) !== String(id)))
+  }
 
   const REPORTS = useMemo(() => ([
     { id: 1, user: 'Aisha Khan', type: 'Issue', date: '2025-10-01', status: 'Open' },
@@ -106,21 +181,45 @@ export default function Admin({ events, jobs, alumniCount }: { events: Event[]; 
         </Card>
 
         <Card className="p-6">
-          <div className="text-xl font-semibold">Announcement Composer</div>
-          <div className="mt-4 space-y-3">
-            <Input value={annTitle} onChange={e=>setAnnTitle(e.target.value)} placeholder="Subject" />
-            <textarea value={annBody} onChange={e=>setAnnBody(e.target.value)} rows={5} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-slate-900 ring-1 ring-slate-200 shadow-sm" placeholder="Write announcement" />
-            <div className="flex items-center gap-2">
-              <Button variant="primary" onClick={() => {
-                const ok = annTitle.trim().length >= 2 && annBody.trim().length >= 10
-                setAnnStatus(ok ? 'Announcement published' : 'Fill subject and message')
-                if (ok) { setAnnTitle(''); setAnnBody('') }
-              }}>Publish</Button>
-              {annStatus && <div className={(annStatus.includes('published') ? 'text-green-700' : 'text-red-700') + ' text-sm'}>{annStatus}</div>}
-            </div>
+          <div className="flex items-center justify-between">
+            <div className="text-xl font-semibold">Jobs Management</div>
+            <Button variant="primary" onClick={openJobCreate}>Add Job</Button>
           </div>
+          <ul className="mt-4 space-y-3">
+            {jobsState.map(j => (
+              <li key={j.id} className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
+                    <div className="font-semibold">{j.title}</div>
+                    <div className="text-sm text-slate-600">{j.company} • {j.location}</div>
+                    <div className="text-xs text-slate-500 line-clamp-2">{j.link}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => openJobEdit(j)}>Edit</Button>
+                    <Button variant="outline" onClick={() => removeJob(j.id)}>Delete</Button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </Card>
       </div>
+
+      <Card className="p-6">
+        <div className="text-xl font-semibold">Announcement Composer</div>
+        <div className="mt-4 space-y-3">
+          <Input value={annTitle} onChange={e=>setAnnTitle(e.target.value)} placeholder="Subject" />
+          <textarea value={annBody} onChange={e=>setAnnBody(e.target.value)} rows={5} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-slate-900 ring-1 ring-slate-200 shadow-sm" placeholder="Write announcement" />
+          <div className="flex items-center gap-2">
+            <Button variant="primary" onClick={() => {
+              const ok = annTitle.trim().length >= 2 && annBody.trim().length >= 10
+              setAnnStatus(ok ? 'Announcement published' : 'Fill subject and message')
+              if (ok) { setAnnTitle(''); setAnnBody('') }
+            }}>Publish</Button>
+            {annStatus && <div className={(annStatus.includes('published') ? 'text-green-700' : 'text-red-700') + ' text-sm'}>{annStatus}</div>}
+          </div>
+        </div>
+      </Card>
 
       <Card className="p-6">
         <div className="text-xl font-semibold">User Reports</div>
@@ -154,17 +253,30 @@ export default function Admin({ events, jobs, alumniCount }: { events: Event[]; 
 
       <Modal open={evOpen} onClose={() => setEvOpen(false)} title={editId == null ? 'Add Event' : 'Edit Event'}>
         <div className="space-y-3">
+          {evError && <div className="rounded-md bg-red-900/30 text-red-100 px-3 py-2 text-sm">{evError}</div>}
           <Input value={evTitle} onChange={e=>setEvTitle(e.target.value)} placeholder="Title" />
           <input type="date" value={evDate} onChange={e=>setEvDate(e.target.value)} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-slate-900 ring-1 ring-slate-200 shadow-sm" />
           <Input value={evLocation} onChange={e=>setEvLocation(e.target.value)} placeholder="Location" />
           <textarea value={evDesc} onChange={e=>setEvDesc(e.target.value)} rows={4} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-slate-900 ring-1 ring-slate-200 shadow-sm" placeholder="Description" />
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setEvOpen(false)}>Back</Button>
-            <Button variant="primary" onClick={saveEvent}>Save</Button>
+            <Button variant="primary" onClick={saveEvent} disabled={evSaving}>{evSaving ? 'Saving…' : 'Save'}</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={jobOpen} onClose={() => setJobOpen(false)} title={jobEditId == null ? 'Add Job' : 'Edit Job'}>
+        <div className="space-y-3">
+          <Input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="Title" />
+          <Input value={jobCompany} onChange={e=>setJobCompany(e.target.value)} placeholder="Company" />
+          <Input value={jobLocation} onChange={e=>setJobLocation(e.target.value)} placeholder="Location" />
+          <Input value={jobLink} onChange={e=>setJobLink(e.target.value)} placeholder="Link" />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setJobOpen(false)}>Back</Button>
+            <Button variant="primary" onClick={saveJob}>Save</Button>
           </div>
         </div>
       </Modal>
     </section>
   )
 }
-

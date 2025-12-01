@@ -17,11 +17,12 @@ import Admin from './pages/Admin'
 import LoginModal from './components/LoginModal'
 import SignupModal from './components/SignupModal'
 import ContactModal from './components/ContactModal'
-import { SERVICES } from './data/services.js'
-import { ALUMNI } from './data/alumni.js'
-import { MENTORS } from './data/mentors.js'
-import { EVENTS } from './data/events.js'
-import { JOBS } from './data/jobs.js'
+// import { SERVICES } from './data/services.js'
+// import { ALUMNI } from './data/alumni.js'
+// import { MENTORS } from './data/mentors.js'
+// import { EVENTS } from './data/events.js'
+// import { JOBS } from './data/jobs.js'
+import { getServices, getAlumni, getJobs, getEvents } from './api'
 
 type Route = 'dashboard' | 'services' | 'service' | 'directory' | 'events' | 'jobs' | 'contact' | 'career' | 'mentorship' | 'admin' | 'signup' | 'forgot' | 'profile' | 'settings'
 
@@ -63,8 +64,8 @@ const NAV_ITEMS: [Route, string][] = [
   ['admin','Admin'],
   ['contact','Contact']
 ]
-const SERVICES_LIST: Service[] = SERVICES as Service[]
-const MENTORS_LIST: Mentor[] = MENTORS as Mentor[]
+// const SERVICES_LIST: Service[] = SERVICES as Service[]
+// const MENTORS_LIST: Mentor[] = MENTORS as Mentor[]
 
 export default function App() {
   const [state, setState] = useState({
@@ -87,9 +88,48 @@ export default function App() {
     svcDetail: null as Service | null,
     svcCategory: 'All' as 'All' | 'Career' | 'Community' | 'Benefits' | 'Support'
   })
+  const [services, setServices] = useState<Service[]>([])
+  const [alumni, setAlumni] = useState<Alumni[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [events, setEvents] = useState<Event[]>([])
   const navigate = useNavigate()
   const location = useLocation()
   const currentRoute: Route = PATH_TO_ROUTE[location.pathname] ?? 'dashboard'
+
+  React.useEffect(() => {
+    let stop = false
+    ;(async () => {
+      try {
+        const [svc, alm, j, ev] = await Promise.all([
+          getServices().catch(()=>[]),
+          getAlumni().catch(()=>[]),
+          getJobs().catch(()=>[]),
+          getEvents().catch(()=>[]),
+        ])
+        if (!stop) {
+          setServices(svc as Service[])
+          setAlumni(alm as Alumni[])
+          setJobs(j as Job[])
+          setEvents(ev as Event[])
+        }
+      } catch {}
+    })()
+    return () => { stop = true }
+  }, [])
+
+  React.useEffect(() => {
+    try { if (localStorage.getItem('token')) setState(s => ({ ...s, authed: true })) } catch {}
+  }, [])
+
+  React.useEffect(() => {
+    const handler = () => { getEvents().then((ev)=>setEvents(ev)).catch(()=>{}) }
+    // @ts-ignore
+    window.addEventListener('eventsUpdated', handler)
+    return () => {
+      // @ts-ignore
+      window.removeEventListener('eventsUpdated', handler)
+    }
+  }, [])
 
   const setRoute = (r: Route) => {
     setState(s => ({ ...s, route: r }))
@@ -117,8 +157,8 @@ export default function App() {
 
   const filtered = useMemo(() => {
     const q = state.query.trim().toLowerCase()
-    if (!q) return ALUMNI
-    return ALUMNI.filter(a =>
+    if (!q) return alumni
+    return alumni.filter(a =>
       a.name.toLowerCase().includes(q) ||
       String(a.batch).includes(q) ||
       a.department.toLowerCase().includes(q) ||
@@ -126,23 +166,23 @@ export default function App() {
       a.company.toLowerCase().includes(q) ||
       a.role.toLowerCase().includes(q)
     )
-  }, [state.query])
+  }, [state.query, alumni])
 
   const servicesFiltered = useMemo(() => {
     const q = state.svcQuery.trim().toLowerCase()
-    return SERVICES_LIST.filter(s => {
+    return services.filter(s => {
       const matchesText = !q || s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
       const matchesCat = state.svcCategory === 'All' || s.category === state.svcCategory
       return matchesText && matchesCat
     })
-  }, [state.svcQuery, state.svcCategory])
+  }, [state.svcQuery, state.svcCategory, services])
 
   const openService = (id: string) => {
     if (id === 'login') { setLoginOpen(true); return }
     if (id === 'jobs') { setRoute('jobs'); return }
     if (id === 'events') { setRoute('events'); return }
     if (id === 'contact') { setRoute('contact'); return }
-    const s = SERVICES_LIST.find(x => x.id === id) || null
+    const s = services.find(x => x.id === id) || null
     setSvcDetail(s as Service | null)
     setRoute('service')
   }
@@ -150,14 +190,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800 overflow-x-hidden">
-      <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV_ITEMS as any} authed={state.authed} onSignOut={() => setState(s => ({ ...s, authed: false }))} />
+      <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV_ITEMS as any} authed={state.authed} onSignOut={() => { try { localStorage.removeItem('token') } catch {}; setState(s => ({ ...s, authed: false })) }} />
 
       <div className="mx-auto max-w-7xl">
         <main className="px-4 py-8">
           <Routes>
             <Route
               path="/"
-              element={<Dashboard onNavigate={(r) => setRoute(r)} featured={ALUMNI.slice(0,6).map(a => ({ id: a.id, name: a.name, role: a.role, company: a.company }))} />}
+              element={<Dashboard onNavigate={(r) => setRoute(r)} featured={alumni.slice(0,6).map(a => ({ id: a.id, name: a.name, role: a.role, company: a.company }))} />}
             />
             <Route
               path="/services"
@@ -195,12 +235,12 @@ export default function App() {
             />
             <Route path="/directory" element={<Directory alumni={filtered} query={state.query} onQueryChange={setQuery} />} />
             <Route path="/events" element={<Events />} />
-            <Route path="/jobs" element={<Jobs jobs={JOBS} />} />
+            <Route path="/jobs" element={<Jobs />} />
             <Route
               path="/career"
               element={
                 <CareerSupport
-                  jobs={JOBS}
+                  jobs={jobs}
                   internships={[
                     { id: 101, title: 'Software Intern', company: 'TechNest', location: 'Karachi' },
                     { id: 102, title: 'Data Intern', company: 'MarketIQ', location: 'Remote' },
@@ -212,8 +252,8 @@ export default function App() {
                 />
               }
             />
-            <Route path="/mentorship" element={<Mentorship mentors={MENTORS_LIST} />} />
-            <Route path="/admin" element={<Admin events={EVENTS} jobs={JOBS} alumniCount={ALUMNI.length} />} />
+            <Route path="/mentorship" element={<Mentorship />} />
+            <Route path="/admin" element={<Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} />} />
             <Route path="/contact" element={<Contact onOpenMessage={() => setContactOpen(true)} />} />
             <Route path="/signup" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
             <Route path="/forgot" element={<Forgot onBack={() => setRoute('signup')} />} />
