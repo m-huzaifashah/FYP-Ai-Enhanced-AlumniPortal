@@ -46,10 +46,10 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
   const [mobileOpen, setMobileOpen] = useState(false)
   const [drawerAnim, setDrawerAnim] = useState(false)
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className={(mobileOpen ? 'bg-[#E8F4FF]' : 'bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60') + ' sticky top-0 z-40'}>
       <div className="mx-auto max-w-7xl h-16 px-3 sm:px-6 grid grid-cols-[auto_1fr_auto] items-center">
         <div className="flex items-center gap-2">
-          <button aria-label="Menu" onClick={() => { setMobileOpen(true); setTimeout(()=>setDrawerAnim(true),0) }} className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue ring-1 ring-slate-200 text-slate-700 shadow-sm">
+          <button aria-label="Menu" onClick={() => { setMobileOpen(true); setTimeout(()=>setDrawerAnim(true),0) }} className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 text-slate-700 shadow-sm">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
           </button>
           <Logo />
@@ -69,7 +69,7 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
           <IconButton>
             <Icon name="bell" />
           </IconButton>
-          <button onClick={() => setOpen(v=>!v)} className="inline-flex items-center gap-2 rounded-full bg-blue ring-1 ring-slate-200 px-2 py-1 shadow-sm">
+          <button onClick={() => setOpen(v=>!v)} className="inline-flex items-center gap-2 rounded-full bg-white ring-1 ring-slate-200 px-2 py-1 shadow-sm">
             <div className="h-7 w-7 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" />
             <div className="text-sm text-slate-700">Account</div>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="text-slate-500"><path d="M7 10l5 5 5-5H7z"/></svg>
@@ -93,7 +93,7 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} />
-          <div className={(drawerAnim ? 'translate-x-0' : '-translate-x-full') + ' absolute left-0 top-0 h-full w-72 max-w-[85vw] bg-[#E8F4FF] ring-1 ring-slate-200 shadow-xl p-4 transition-transform duration-300'}>
+          <div className={(drawerAnim ? 'translate-x-0' : '-translate-x-full') + ' absolute left-0 top-0 h-full w-full sm:w-72 sm:max-w-[85vw] bg-[#E8F4FF] ring-1 ring-slate-200 shadow-xl p-4 transition-transform duration-300'}>
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold">Menu</div>
               <button aria-label="Close" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white ring-1 ring-slate-200">

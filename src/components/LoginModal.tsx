@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { postLogin } from '../api'
 import { Modal } from '../ui'
 
 export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, loginPassword, setLoginPassword, loginError, setLoginError, onGoForgot, onGoSignup, onLoggedIn }: { open: boolean; onClose: () => void; loginEmail: string; setLoginEmail: (v: string) => void; loginPassword: string; setLoginPassword: (v: string) => void; loginError: string; setLoginError: (v: string) => void; onGoForgot: () => void; onGoSignup: () => void; onLoggedIn?: () => void }) {
@@ -10,12 +11,21 @@ export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, l
   const passOk = useMemo(() => pass.length >= 6, [pass])
   const canSubmit = emailOk && passOk && !loading
 
-  const submit = () => {
+  const submit = async () => {
     if (!emailOk) { setLoginError('Enter a valid email'); return }
     if (!passOk) { setLoginError('Enter 6+ char password'); return }
     setLoginError('')
     setLoading(true)
-    setTimeout(() => { setLoading(false); onLoggedIn && onLoggedIn(); onClose() }, 800)
+    try {
+      const { token } = await postLogin(email, pass)
+      try { localStorage.setItem('token', token) } catch {}
+      onLoggedIn && onLoggedIn()
+      onClose()
+    } catch (e: any) {
+      setLoginError(e?.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

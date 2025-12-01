@@ -149,7 +149,7 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800">
+    <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800 overflow-x-hidden">
       <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV_ITEMS as any} authed={state.authed} onSignOut={() => setState(s => ({ ...s, authed: false }))} />
 
       <div className="mx-auto max-w-7xl">
@@ -194,7 +194,7 @@ export default function App() {
               }
             />
             <Route path="/directory" element={<Directory alumni={filtered} query={state.query} onQueryChange={setQuery} />} />
-            <Route path="/events" element={<Events events={EVENTS} />} />
+            <Route path="/events" element={<Events />} />
             <Route path="/jobs" element={<Jobs jobs={JOBS} />} />
             <Route
               path="/career"

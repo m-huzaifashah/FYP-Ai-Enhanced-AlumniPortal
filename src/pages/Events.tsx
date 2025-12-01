@@ -1,15 +1,38 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Button, Card, Input, Modal, IconButton, Icon } from '../ui'
+import { getEvents } from '../api'
 
 type Event = { id: number; title: string; date: string; location: string; description: string }
 
-export default function Events({ events }: { events: Event[] }) {
+export default function Events() {
   const [city, setCity] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState<Event | null>(null)
-  const [rsvp, setRsvp] = useState<Record<number, number>>(() => Object.fromEntries(events.map(e => [e.id, Math.floor(Math.random()*40)+10])))
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [rsvp, setRsvp] = useState<Record<number, number>>({})
+
+  useEffect(() => {
+    let stop = false
+    ;(async () => {
+      setLoading(true); setError('')
+      try {
+        const data: Event[] = await getEvents()
+        if (!stop) {
+          setEvents(data)
+          setRsvp(Object.fromEntries(data.map(e => [e.id, Math.floor(Math.random()*40)+10])))
+        }
+      } catch (e: any) {
+        if (!stop) setError(e?.message || 'Failed to load events')
+      } finally {
+        if (!stop) setLoading(false)
+      }
+    })()
+    return () => { stop = true }
+  }, [])
 
   const filtered = useMemo(() => {
     const s = start ? new Date(start) : null
@@ -41,6 +64,9 @@ export default function Events({ events }: { events: Event[] }) {
         <div className="text-3xl font-bold">Events</div>
         <div className="mt-2 text-slate-600">Discover upcoming activities and revisit past highlights.</div>
       </div>
+
+      {error && <div className="mx-auto max-w-7xl text-sm text-red-700">{error}</div>}
+      {loading && <div className="mx-auto max-w-7xl text-sm text-slate-600">Loading…</div>}
 
       <Card className="p-4">
         <div className="grid gap-3 md:grid-cols-[1fr_160px_160px] items-center">
