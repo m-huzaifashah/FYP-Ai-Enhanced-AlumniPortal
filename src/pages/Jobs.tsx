@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { IconCard } from '../ui'
 import { getJobs } from '../api'
 
-type Job = { id: number; title: string; company: string; location: string; link: string }
+type Job = { id: number | string; title: string; company: string; location: string; link: string }
 
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([])

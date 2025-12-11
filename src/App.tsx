@@ -29,7 +29,7 @@ type Route = 'dashboard' | 'services' | 'service' | 'directory' | 'events' | 'jo
 type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
 type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string }
 type Event = { id: number | string; title: string; date: string; location: string; description: string }
-type Job = { id: number; title: string; company: string; location: string; link: string }
+type Job = { id: number | string; title: string; company: string; location: string; link: string }
 type Mentor = { id: number; name: string; title: string; company: string; city: string; skills: string[]; type: 'mentor' | 'mentee' }
 
 // data moved to JS files and imported above

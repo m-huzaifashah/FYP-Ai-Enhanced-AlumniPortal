@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Button, Card, Input, Modal, IconButton, Icon } from '../ui'
 import { getEvents } from '../api'
 
-type Event = { id: number; title: string; date: string; location: string; description: string }
+type Event = { id: number | string; title: string; date: string; location: string; description: string }
 
 export default function Events() {
   const [city, setCity] = useState('')
@@ -13,7 +13,7 @@ export default function Events() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [rsvp, setRsvp] = useState<Record<number, number>>({})
+  const [rsvp, setRsvp] = useState<Record<string | number, number>>({})
 
   useEffect(() => {
     let stop = false
