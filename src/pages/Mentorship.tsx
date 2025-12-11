@@ -1,9 +1,13 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Button, Card, Input, Modal } from '../ui'
+import { getMentors } from '../api'
 
 type Mentor = { id: number; name: string; title: string; company: string; city: string; skills: string[]; type: 'mentor' | 'mentee' }
 
-export default function Mentorship({ mentors }: { mentors: Mentor[] }) {
+export default function Mentorship() {
+  const [mentors, setMentors] = useState<Mentor[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [skill, setSkill] = useState('')
   const [requestOpen, setRequestOpen] = useState(false)
   const [target, setTarget] = useState<Mentor | null>(null)
@@ -19,10 +23,28 @@ export default function Mentorship({ mentors }: { mentors: Mentor[] }) {
     return mentors.filter(m => m.skills.some(k => k.toLowerCase().includes(s)) || m.title.toLowerCase().includes(s) || m.company.toLowerCase().includes(s))
   }, [mentors, skill])
 
+  useEffect(() => {
+    let stop = false
+    ;(async () => {
+      setLoading(true); setError('')
+      try {
+        const data: Mentor[] = await getMentors()
+        if (!stop) setMentors(data)
+      } catch (e: any) {
+        if (!stop) setError(e?.message || 'Failed to load mentors')
+      } finally {
+        if (!stop) setLoading(false)
+      }
+    })()
+    return () => { stop = true }
+  }, [])
+
   const suggestions = useMemo(() => filtered.slice(0, 3), [filtered])
 
   return (
     <section className="space-y-8">
+      {error && <div className="mx-auto max-w-7xl text-sm text-red-700">{error}</div>}
+      {loading && <div className="mx-auto max-w-7xl text-sm text-slate-600">Loading…</div>}
       <div className="text-center">
         <div className="text-3xl font-bold">Mentorship</div>
         <div className="mt-2 text-slate-600">Find mentors by skill, browse tags, and request guidance.</div>
