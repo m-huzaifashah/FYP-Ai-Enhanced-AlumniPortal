@@ -5,7 +5,7 @@ import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob 
 type Event = { id: number | string; title: string; date: string; location: string; description: string }
 type Job = { id: number | string; title: string; company: string; location: string; link: string }
 
-export default function Admin({ events, jobs, alumniCount, onEventsChanged }: { events: Event[]; jobs: Job[]; alumniCount: number; onEventsChanged?: (next: Event[]) => void }) {
+export default function Admin({ events, jobs, alumniCount, onEventsChanged, dataMode }: { events: Event[]; jobs: Job[]; alumniCount: number; onEventsChanged?: (next: Event[]) => void; dataMode?: 'db' | 'memory' }) {
   const [evs, setEvs] = useState<Event[]>(events)
   const [evOpen, setEvOpen] = useState(false)
   const [editId, setEditId] = useState<number | string | null>(null)
@@ -138,7 +138,12 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged }: { 
 
   return (
     <section className="space-y-8">
-      <div className="text-2xl font-bold">Admin Dashboard</div>
+      <div className="text-2xl font-bold flex items-center gap-3">
+        <span>Admin Dashboard</span>
+        {dataMode && (
+          <span className={"text-xs rounded-full px-2 py-1 " + (dataMode === 'db' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800')}>{dataMode === 'db' ? 'Database' : 'In-Memory'}</span>
+        )}
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="p-4">
@@ -153,6 +158,9 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged }: { 
           <div className="text-sm text-slate-600">Open Jobs</div>
           <div className="mt-1 text-3xl font-bold text-slate-900"><Counter to={jobsCount} /></div>
         </Card>
+      </div>
+
+      <div className="text-xs text-slate-600">Data Source: {dataMode === 'db' ? 'Database' : 'In-Memory (dev)'}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

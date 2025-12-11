@@ -22,13 +22,13 @@ import ContactModal from './components/ContactModal'
 // import { MENTORS } from './data/mentors.js'
 // import { EVENTS } from './data/events.js'
 // import { JOBS } from './data/jobs.js'
-import { getServices, getAlumni, getJobs, getEvents } from './api'
+import { getServices, getAlumni, getJobs, getEvents, getHealth } from './api'
 
 type Route = 'dashboard' | 'services' | 'service' | 'directory' | 'events' | 'jobs' | 'contact' | 'career' | 'mentorship' | 'admin' | 'signup' | 'forgot' | 'profile' | 'settings'
 
 type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
 type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string }
-type Event = { id: number; title: string; date: string; location: string; description: string }
+type Event = { id: number | string; title: string; date: string; location: string; description: string }
 type Job = { id: number; title: string; company: string; location: string; link: string }
 type Mentor = { id: number; name: string; title: string; company: string; city: string; skills: string[]; type: 'mentor' | 'mentee' }
 
@@ -92,6 +92,7 @@ export default function App() {
   const [alumni, setAlumni] = useState<Alumni[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [events, setEvents] = useState<Event[]>([])
+  const [apiMode, setApiMode] = useState<'db' | 'memory'>('memory')
   const navigate = useNavigate()
   const location = useLocation()
   const currentRoute: Route = PATH_TO_ROUTE[location.pathname] ?? 'dashboard'
@@ -100,17 +101,20 @@ export default function App() {
     let stop = false
     ;(async () => {
       try {
-        const [svc, alm, j, ev] = await Promise.all([
+        const [svc, alm, j, ev, health] = await Promise.all([
           getServices().catch(()=>[]),
           getAlumni().catch(()=>[]),
           getJobs().catch(()=>[]),
           getEvents().catch(()=>[]),
+          getHealth().catch(()=>({ mode: 'memory' })) as Promise<any>,
         ])
         if (!stop) {
           setServices(svc as Service[])
           setAlumni(alm as Alumni[])
           setJobs(j as Job[])
           setEvents(ev as Event[])
+          const m = (health as any)?.mode === 'db' ? 'db' : 'memory'
+          setApiMode(m as any)
         }
       } catch {}
     })()
@@ -253,7 +257,7 @@ export default function App() {
               }
             />
             <Route path="/mentorship" element={<Mentorship />} />
-            <Route path="/admin" element={<Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} />} />
+            <Route path="/admin" element={<Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} />} />
             <Route path="/contact" element={<Contact onOpenMessage={() => setContactOpen(true)} />} />
             <Route path="/signup" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
             <Route path="/forgot" element={<Forgot onBack={() => setRoute('signup')} />} />

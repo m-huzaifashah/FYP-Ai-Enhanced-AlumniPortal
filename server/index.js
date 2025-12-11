@@ -25,6 +25,56 @@ async function initDb() {
     await client.connect()
     db = client.db(process.env.DB_NAME || 'Alumni_portal')
     console.log('Connected to MongoDB')
+    const validators = {
+      events: { $jsonSchema: { bsonType: 'object', required: ['title','date','location'], properties: { title: { bsonType: 'string', minLength: 1 }, date: { bsonType: 'string' }, location: { bsonType: 'string', minLength: 1 }, description: { bsonType: 'string' } }, additionalProperties: false } },
+      jobs: { $jsonSchema: { bsonType: 'object', required: ['title','company','location'], properties: { title: { bsonType: 'string', minLength: 1 }, company: { bsonType: 'string', minLength: 1 }, location: { bsonType: 'string', minLength: 1 }, link: { bsonType: 'string' } }, additionalProperties: false } },
+      mentors: { $jsonSchema: { bsonType: 'object', required: ['name','title','company','city','skills','type'], properties: { name: { bsonType: 'string', minLength: 1 }, title: { bsonType: 'string' }, company: { bsonType: 'string' }, city: { bsonType: 'string' }, type: { bsonType: 'string' }, skills: { bsonType: 'array', items: { bsonType: 'string' } } }, additionalProperties: false } },
+      alumni: { $jsonSchema: { bsonType: 'object', required: ['name','batch','department','location','role','company'], properties: { name: { bsonType: 'string' }, batch: { anyOf: [{ bsonType: 'int' }, { bsonType: 'double' }] }, department: { bsonType: 'string' }, location: { bsonType: 'string' }, role: { bsonType: 'string' }, company: { bsonType: 'string' } }, additionalProperties: false } },
+      services: { $jsonSchema: { bsonType: 'object', required: ['id','title','description','category'], properties: { id: { bsonType: 'string' }, title: { bsonType: 'string' }, description: { bsonType: 'string' }, category: { bsonType: 'string' } }, additionalProperties: false } }
+    }
+    const ensureCollection = async (name, validator) => {
+      try {
+        const exists = await db.listCollections({ name }).hasNext()
+        if (!exists) {
+          try {
+            await db.createCollection(name, { validator, validationLevel: 'moderate' })
+          } catch (e) {
+            console.warn(`Create '${name}' without validator`, e?.codeName || e?.message || e)
+            await db.createCollection(name)
+          }
+        } else {
+          try {
+            await db.command({ collMod: name, validator, validationLevel: 'moderate' })
+          } catch (e) {
+            console.warn(`Validator not applied to '${name}'`, e?.codeName || e?.message || e)
+          }
+        }
+      } catch (e) {
+        console.warn(`ensureCollection '${name}' failed`, e?.message || e)
+      }
+    }
+    await ensureCollection('events', validators.events)
+    await ensureCollection('jobs', validators.jobs)
+    await ensureCollection('mentors', validators.mentors)
+    await ensureCollection('alumni', validators.alumni)
+    await ensureCollection('services', validators.services)
+    try {
+      const seedIfEmpty = async (name, docs) => {
+        const coll = db.collection(name)
+        const count = await coll.estimatedDocumentCount()
+        if (count === 0 && Array.isArray(docs) && docs.length) {
+          await coll.insertMany(docs)
+          console.log(`Seeded collection '${name}' with ${docs.length} docs`)
+        }
+      }
+      await seedIfEmpty('events', EVENTS)
+      await seedIfEmpty('jobs', JOBS)
+      await seedIfEmpty('mentors', MENTORS)
+      await seedIfEmpty('alumni', ALUMNI)
+      await seedIfEmpty('services', SERVICES)
+    } catch (e) {
+      console.warn('Seeding skipped or failed', e?.message || e)
+    }
   } catch (e) {
     console.error('MongoDB connection failed', e)
   }
@@ -39,6 +89,14 @@ let users = [{ id: 1, email: 'demo@riphah.edu.pk', name: 'Demo User' }]
 let eventsLocal = [...EVENTS]
 let jobsLocal = [...JOBS]
 
+function mapDocs(items) {
+  return (items || []).map(it => {
+    const { _id, ...rest } = it || {}
+    const id = _id ? String(_id) : rest.id
+    return { id, ...rest }
+  })
+}
+
 app.get('/', (req, res) => {
   res.type('text/plain').send('API OK')
 })
@@ -52,7 +110,7 @@ app.get('/favicon.ico', (req, res) => {
 })
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, status: 'healthy', ts: Date.now() })
+  res.json({ ok: true, status: 'healthy', ts: Date.now(), db: !!db, mode: db ? 'db' : 'memory' })
 })
 
 app.post('/api/login', (req, res) => {
@@ -69,7 +127,8 @@ app.get('/api/events', async (req, res) => {
   try {
     if (!db) return res.json(eventsLocal)
     const items = await db.collection('events').find({}).sort({ date: 1 }).toArray()
-    res.json(items.length ? items : eventsLocal)
+    const mapped = mapDocs(items)
+    res.json(mapped.length ? mapped : eventsLocal)
   } catch (e) {
     res.json(eventsLocal)
   }
@@ -82,7 +141,7 @@ app.post('/api/events', async (req, res) => {
     if (db) {
       const doc = { title, date, location, description: description || '' }
       const r = await db.collection('events').insertOne(doc)
-      return res.json({ ...doc, id: r.insertedId })
+      return res.json({ ...doc, id: String(r.insertedId) })
     }
     const id = Math.max(0, ...eventsLocal.map(e => e.id || 0)) + 1
     const ev = { id, title, date, location, description: description || '' }
@@ -125,7 +184,8 @@ app.get('/api/jobs', async (req, res) => {
   try {
     if (!db) return res.json(jobsLocal)
     const items = await db.collection('jobs').find({}).toArray()
-    res.json(items.length ? items : jobsLocal)
+    const mapped = mapDocs(items)
+    res.json(mapped.length ? mapped : jobsLocal)
   } catch (e) {
     res.json(jobsLocal)
   }
@@ -138,7 +198,7 @@ app.post('/api/jobs', async (req, res) => {
     if (db) {
       const doc = { title, company, location, link: link || '' }
       const r = await db.collection('jobs').insertOne(doc)
-      return res.json({ ...doc, id: r.insertedId })
+      return res.json({ ...doc, id: String(r.insertedId) })
     }
     const id = Math.max(0, ...jobsLocal.map(j => j.id || 0)) + 1
     const job = { id, title, company, location, link: link || '' }
@@ -181,7 +241,8 @@ app.get('/api/mentors', async (req, res) => {
   try {
     if (!db) return res.json(MENTORS)
     const items = await db.collection('mentors').find({}).toArray()
-    res.json(items.length ? items : MENTORS)
+    const mapped = mapDocs(items)
+    res.json(mapped.length ? mapped : MENTORS)
   } catch (e) {
     res.json(MENTORS)
   }
@@ -190,7 +251,8 @@ app.get('/api/alumni', async (req, res) => {
   try {
     if (!db) return res.json(ALUMNI)
     const items = await db.collection('alumni').find({}).toArray()
-    res.json(items.length ? items : ALUMNI)
+    const mapped = mapDocs(items)
+    res.json(mapped.length ? mapped : ALUMNI)
   } catch (e) {
     res.json(ALUMNI)
   }
@@ -199,7 +261,8 @@ app.get('/api/services', async (req, res) => {
   try {
     if (!db) return res.json(SERVICES)
     const items = await db.collection('services').find({}).toArray()
-    res.json(items.length ? items : SERVICES)
+    const mapped = mapDocs(items)
+    res.json(mapped.length ? mapped : SERVICES)
   } catch (e) {
     res.json(SERVICES)
   }

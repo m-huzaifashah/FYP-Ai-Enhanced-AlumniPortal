@@ -51,6 +51,12 @@ export async function postContact(payload: { name: string; email: string; messag
   return data
 }
 
+export async function getHealth() {
+  const res = await fetch(`${API_BASE}/health`)
+  if (!res.ok) throw new Error('Failed to load health')
+  return res.json()
+}
+
 export async function createEvent(payload: { title: string; date: string; location: string; description?: string }) {
   const res = await fetch(`${API_BASE}/events`, {
     method: 'POST',
