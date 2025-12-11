@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react'
 import { Button, Card, Input, Modal } from '../ui'
 
-type Job = { id: number; title: string; company: string; location: string }
+type Job = { id: number | string; title: string; company: string; location: string }
 type Internship = { id: number; title: string; company: string; location: string }
 
 export default function CareerSupport({ jobs, internships }: { jobs: Job[]; internships: Internship[] }) {
   const [applyOpen, setApplyOpen] = useState(false)
-  const [applyItem, setApplyItem] = useState<{ type: 'job' | 'internship'; id: number; title: string } | null>(null)
+  const [applyItem, setApplyItem] = useState<{ type: 'job' | 'internship'; id: number | string; title: string } | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [resumeMsg, setResumeMsg] = useState('')
@@ -15,7 +15,7 @@ export default function CareerSupport({ jobs, internships }: { jobs: Job[]; inte
   const [sgError, setSgError] = useState('')
   const [sgData, setSgData] = useState<{ comm: number; tech: number; tools: number; domain: number; gap: number } | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [detailItem, setDetailItem] = useState<{ type: 'job' | 'internship'; id: number; title: string; company: string; location: string } | null>(null)
+  const [detailItem, setDetailItem] = useState<{ type: 'job' | 'internship'; id: number | string; title: string; company: string; location: string } | null>(null)
   const [coachOpen, setCoachOpen] = useState(false)
   const [coachName, setCoachName] = useState('')
   const [coachEmail, setCoachEmail] = useState('')
@@ -26,8 +26,8 @@ export default function CareerSupport({ jobs, internships }: { jobs: Job[]; inte
   const [loc, setLoc] = useState('All')
   const [kind, setKind] = useState<'All' | 'Jobs' | 'Internships'>('All')
 
-  const openApply = (type: 'job' | 'internship', id: number, title: string) => { setApplyItem({ type, id, title }); setApplyOpen(true) }
-  const openDetails = (type: 'job' | 'internship', id: number, title: string, company: string, location: string) => { setDetailItem({ type, id, title, company, location }); setDetailOpen(true) }
+  const openApply = (type: 'job' | 'internship', id: number | string, title: string) => { setApplyItem({ type, id, title }); setApplyOpen(true) }
+  const openDetails = (type: 'job' | 'internship', id: number | string, title: string, company: string, location: string) => { setDetailItem({ type, id, title, company, location }); setDetailOpen(true) }
 
   const locations = useMemo(() => ['All', ...Array.from(new Set([...jobs.map(j=>j.location), ...internships.map(i=>i.location)]))], [jobs, internships])
   const filteredJobs = useMemo(() => {
