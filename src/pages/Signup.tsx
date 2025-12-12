@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
+import { postSignup, postLogin } from '../api'
 
 export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLogin: () => void; onBack: () => void; onOpenForgot: () => void }) {
-  const [role, setRole] = useState<'student' | 'admin'>('student')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -10,13 +10,27 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
   const [success, setSuccess] = useState('')
   const RIU_LOGO = 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png'
 
-  const submit = () => {
+  const submit = async () => {
     const emailOk = /.+@.+\..+/.test(email)
     const passOk = password.length >= 6 && password === confirm
     const nameOk = name.trim().length >= 2
     if (!nameOk || !emailOk || !passOk) { setError('Fill all fields correctly'); setSuccess(''); return }
     setError('')
-    setSuccess('Account created. You can sign in now.')
+    try {
+      const payload: any = { name: name.trim(), email: email.trim(), password, role: 'student' }
+      const data = await postSignup(payload)
+      try {
+        const { token, user } = await postLogin(email.trim(), password)
+        try { localStorage.setItem('token', token) } catch {}
+        try { localStorage.setItem('role', user.role) } catch {}
+        setSuccess('Account created and signed in.')
+      } catch (e) {
+        setSuccess('Account created. You can sign in now.')
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Signup failed')
+      setSuccess('')
+    }
   }
 
   return (
@@ -35,16 +49,7 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
               <img src={RIU_LOGO} alt="Riphah International University" className="h-12 w-auto" />
               <div className="text-xl font-semibold">Riphah Alumni Portal</div>
             </div>
-            <div className="mt-6 text-sm">
-              <label className="inline-flex items-center gap-2 mr-4">
-                <input type="radio" checked={role==='student'} onChange={()=>setRole('student')} />
-                <span>Student</span>
-              </label>
-              <label className="inline-flex items-center gap-2">
-                <input type="radio" checked={role==='admin'} onChange={()=>setRole('admin')} />
-                <span>Admin</span>
-              </label>
-            </div>
+            <div className="mt-6 text-sm" />
             <div className="mt-6 space-y-3">
               {error && <div className="rounded-md bg-red-100 text-red-700 text-sm px-3 py-2">{error}</div>}
               {success && <div className="rounded-md bg-green-100 text-green-700 text-sm px-3 py-2">{success}</div>}
@@ -63,7 +68,7 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
           </div>
           <div className="hidden lg:block p-8">
             <div className="h-full grid place-items-center">
-              <img src="https://placehold.co/600x420/EEF2FF/0B4C72?text=Alumni+Signup" alt="Signup Illustration" className="w-full h-auto rounded-md" />
+              <img src="/public/signup.png" alt="Signup Illustration" className="w-full h-auto rounded-md" />
             </div>
           </div>
         </div>

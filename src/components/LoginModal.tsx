@@ -17,8 +17,9 @@ export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, l
     setLoginError('')
     setLoading(true)
     try {
-      const { token } = await postLogin(email, pass)
+      const { token, user } = await postLogin(email, pass)
       try { localStorage.setItem('token', token) } catch {}
+      try { localStorage.setItem('role', user.role) } catch {}
       onLoggedIn && onLoggedIn()
       onClose()
     } catch (e: any) {
