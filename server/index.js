@@ -3,6 +3,7 @@ import cors from 'cors'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
 import { MongoClient, ObjectId } from 'mongodb'
+import crypto from 'crypto'
 
 import { EVENTS } from '../src/data/events.js'
 import { JOBS } from '../src/data/jobs.js'
@@ -12,9 +13,13 @@ import { SERVICES } from '../src/data/services.js'
 
 const app = express()
 dotenv.config()
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3008
 let client
 let db
+
+function hashPassword(p) {
+  return crypto.createHash('sha256').update(String(p)).digest('hex')
+}
 async function initDb() {
   try {
     if (!process.env.MONGO_URI) {
@@ -30,7 +35,8 @@ async function initDb() {
       jobs: { $jsonSchema: { bsonType: 'object', required: ['title','company','location'], properties: { title: { bsonType: 'string', minLength: 1 }, company: { bsonType: 'string', minLength: 1 }, location: { bsonType: 'string', minLength: 1 }, link: { bsonType: 'string' } }, additionalProperties: false } },
       mentors: { $jsonSchema: { bsonType: 'object', required: ['name','title','company','city','skills','type'], properties: { name: { bsonType: 'string', minLength: 1 }, title: { bsonType: 'string' }, company: { bsonType: 'string' }, city: { bsonType: 'string' }, type: { bsonType: 'string' }, skills: { bsonType: 'array', items: { bsonType: 'string' } } }, additionalProperties: false } },
       alumni: { $jsonSchema: { bsonType: 'object', required: ['name','batch','department','location','role','company'], properties: { name: { bsonType: 'string' }, batch: { anyOf: [{ bsonType: 'int' }, { bsonType: 'double' }] }, department: { bsonType: 'string' }, location: { bsonType: 'string' }, role: { bsonType: 'string' }, company: { bsonType: 'string' } }, additionalProperties: false } },
-      services: { $jsonSchema: { bsonType: 'object', required: ['id','title','description','category'], properties: { id: { bsonType: 'string' }, title: { bsonType: 'string' }, description: { bsonType: 'string' }, category: { bsonType: 'string' } }, additionalProperties: false } }
+      services: { $jsonSchema: { bsonType: 'object', required: ['id','title','description','category'], properties: { id: { bsonType: 'string' }, title: { bsonType: 'string' }, description: { bsonType: 'string' }, category: { bsonType: 'string' } }, additionalProperties: false } },
+      users: { $jsonSchema: { bsonType: 'object', required: ['email','name','passwordHash','role'], properties: { email: { bsonType: 'string' }, name: { bsonType: 'string' }, passwordHash: { bsonType: 'string' }, role: { bsonType: 'string', enum: ['student','admin'] } }, additionalProperties: false } }
     }
     const ensureCollection = async (name, validator) => {
       try {
@@ -58,6 +64,12 @@ async function initDb() {
     await ensureCollection('mentors', validators.mentors)
     await ensureCollection('alumni', validators.alumni)
     await ensureCollection('services', validators.services)
+    await ensureCollection('users', validators.users)
+    try {
+      await db.collection('users').createIndex({ email: 1 }, { unique: true })
+    } catch (e) {
+      console.warn('Unique index on users.email failed or exists', e?.codeName || e?.message || e)
+    }
     try {
       const seedIfEmpty = async (name, docs) => {
         const coll = db.collection(name)
@@ -72,6 +84,16 @@ async function initDb() {
       await seedIfEmpty('mentors', MENTORS)
       await seedIfEmpty('alumni', ALUMNI)
       await seedIfEmpty('services', SERVICES)
+      const adminEmail = process.env.ADMIN_EMAIL
+      const adminPass = process.env.ADMIN_PASSWORD
+      const adminName = process.env.ADMIN_NAME || 'Portal Admin'
+      if (adminEmail && adminPass) {
+        const exists = await db.collection('users').findOne({ email: adminEmail })
+        if (!exists) {
+          await db.collection('users').insertOne({ email: adminEmail, name: adminName, role: 'admin', passwordHash: hashPassword(adminPass) })
+          console.log(`Seeded admin user '${adminEmail}'`)
+        }
+      }
     } catch (e) {
       console.warn('Seeding skipped or failed', e?.message || e)
     }
@@ -85,7 +107,7 @@ app.use(cors({ origin: true }))
 app.use(express.json())
 app.use(morgan('tiny'))
 
-let users = [{ id: 1, email: 'demo@riphah.edu.pk', name: 'Demo User' }]
+let users = []
 let eventsLocal = [...EVENTS]
 let jobsLocal = [...JOBS]
 
@@ -113,14 +135,78 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, status: 'healthy', ts: Date.now(), db: !!db, mode: db ? 'db' : 'memory' })
 })
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body || {}
   const emailOk = typeof email === 'string' && /[^\s@]+@[^\s@]+\.[^\s@]{2,}/.test(email)
   const passOk = typeof password === 'string' && password.length >= 6
   if (!emailOk || !passOk) return res.status(400).json({ error: 'Invalid credentials' })
-  let user = users.find(u => u.email === email)
-  if (!user) { user = { id: users.length + 1, email, name: email.split('@')[0] }; users.push(user) }
-  res.json({ token: 'demo-token', user })
+  try {
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && email === process.env.ADMIN_EMAIL && hashPassword(password) === hashPassword(process.env.ADMIN_PASSWORD)) {
+      return res.json({ token: crypto.randomBytes(16).toString('hex'), user: { id: 'admin-env', email: process.env.ADMIN_EMAIL, name: process.env.ADMIN_NAME || 'Portal Admin', role: 'admin' } })
+    }
+    if (db) {
+      try {
+        let user = await db.collection('users').findOne({ email })
+        if (!user && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && email === process.env.ADMIN_EMAIL) {
+          const doc = { email: process.env.ADMIN_EMAIL, name: process.env.ADMIN_NAME || 'Portal Admin', role: 'admin', passwordHash: hashPassword(process.env.ADMIN_PASSWORD) }
+          const r = await db.collection('users').insertOne(doc)
+          user = { ...doc, _id: r.insertedId }
+          console.log(`Created admin user '${email}' on login`)
+        }
+        if (user) {
+          const ok = user.passwordHash === hashPassword(password)
+          if (!ok) return res.status(401).json({ error: 'Incorrect password' })
+          return res.json({ token: crypto.randomBytes(16).toString('hex'), user: { id: String(user._id), email: user.email, name: user.name, role: user.role } })
+        }
+        return res.status(401).json({ error: 'User not found' })
+      } catch (e) {
+        console.warn('DB login error', e?.message || e)
+        return res.status(500).json({ error: 'Login failed' })
+      }
+    }
+    return res.status(503).json({ error: 'Database not available' })
+  } catch (e) {
+    console.error('Login error', e?.message || e)
+    res.status(500).json({ error: 'Login failed' })
+  }
+})
+
+app.post('/api/signup', async (req, res) => {
+  const { name, email, password, role, secret } = req.body || {}
+  const emailOk = typeof email === 'string' && /[^\s@]+@[^\s@]+\.[^\s@]{2,}/.test(email)
+  const passOk = typeof password === 'string' && password.length >= 6
+  const nameOk = typeof name === 'string' && name.trim().length >= 2
+  const roleVal = role === 'admin' ? 'admin' : 'student'
+  if (!emailOk || !passOk || !nameOk) return res.status(400).json({ error: 'Invalid signup data' })
+  if (roleVal === 'admin') {
+    const envSecret = process.env.ADMIN_SIGNUP_SECRET
+    if (!envSecret || secret !== envSecret) return res.status(403).json({ error: 'Admin signup not allowed' })
+  }
+  try {
+    if (!db) return res.status(503).json({ error: 'Database not available' })
+    try {
+      const existing = await db.collection('users').findOne({ email })
+      if (existing) return res.status(409).json({ error: 'Email already registered' })
+      const doc = { email, name, role: roleVal, passwordHash: hashPassword(password) }
+      const r = await db.collection('users').insertOne(doc)
+      return res.json({ id: String(r.insertedId), email, name, role: roleVal })
+    } catch (e) {
+      return res.status(500).json({ error: 'Signup failed' })
+    }
+  } catch (e) {
+    res.status(500).json({ error: 'Signup failed' })
+  }
+})
+
+app.get('/api/users', async (req, res) => {
+  try {
+    if (!db) return res.status(503).json({ error: 'Database not available' })
+    const items = await db.collection('users').find({}).project({ email: 1, name: 1, role: 1 }).toArray()
+    const dbUsers = items.map(it => ({ id: String(it._id), email: it.email, name: it.name, role: it.role }))
+    res.json(dbUsers)
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to list users' })
+  }
 })
 
 app.get('/api/events', async (req, res) => {

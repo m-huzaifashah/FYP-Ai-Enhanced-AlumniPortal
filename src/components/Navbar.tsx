@@ -41,10 +41,11 @@ function Social() {
   )
 }
 
-export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = false, onSignOut }: { route: string; onNavigate: (r: string) => void; onOpenLogin: () => void; nav: [string,string][]; authed?: boolean; onSignOut?: () => void }) {
+export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = false, isAdmin = false, onSignOut }: { route: string; onNavigate: (r: string) => void; onOpenLogin: () => void; nav: [string,string][]; authed?: boolean; isAdmin?: boolean; onSignOut?: () => void }) {
   const [open, setOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [drawerAnim, setDrawerAnim] = useState(false)
+  const visibleNav = (isAdmin ? nav : nav.filter(([r]) => r !== 'admin'))
   return (
     <header className="sticky top-0 z-40">
       <div className="bg-[#0B4C72] text-white">
@@ -75,7 +76,7 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
             <Logo />
           </div>
           <nav className="hidden md:flex items-center justify-center gap-4">
-            {nav.map(([r,label]) => (
+            {visibleNav.map(([r,label]) => (
               <button
                 key={r}
                 onClick={() => onNavigate(r)}
@@ -125,7 +126,7 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
                 </button>
               </div>
               <ul className="mt-4 space-y-2">
-                {nav.map(([r,label]) => (
+                {visibleNav.map(([r,label]) => (
                   <li key={r}>
                     <button onClick={() => { setMobileOpen(false); onNavigate(r) }} className={'w-full text-left rounded-lg px-3 py-2 text-sm ' + (route===r ? 'bg-white/10' : 'hover:bg-white/10')}>
                       {label}

@@ -1,6 +1,6 @@
 const API_BASE = ((import.meta as any).env?.VITE_API_URL ?? '/api')
 
-export async function postLogin(email: string, password: string): Promise<{ token: string; user: { id: number; email: string; name: string } }> {
+export async function postLogin(email: string, password: string): Promise<{ token: string; user: { id: string | number; email: string; name: string; role: 'student' | 'admin' } }> {
   const res = await fetch(`${API_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -8,6 +8,17 @@ export async function postLogin(email: string, password: string): Promise<{ toke
   })
   if (!res.ok) throw new Error((await res.json().catch(()=>({error:'Login failed'}))).error || 'Login failed')
   return res.json()
+}
+
+export async function postSignup(payload: { name: string; email: string; password: string; role?: 'student' | 'admin'; secret?: string }): Promise<{ id: string | number; email: string; name: string; role: 'student' | 'admin' }> {
+  const res = await fetch(`${API_BASE}/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  const data = await res.json().catch(() => ({ error: 'Signup failed' }))
+  if (!res.ok) throw new Error((data as any).error || 'Signup failed')
+  return data
 }
 
 export async function getEvents() {

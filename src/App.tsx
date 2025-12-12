@@ -96,6 +96,14 @@ export default function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const currentRoute: Route = PATH_TO_ROUTE[location.pathname] ?? 'dashboard'
+  const isAdmin = (() => { try { return state.authed && localStorage.getItem('role') === 'admin' } catch { return false } })()
+
+  React.useEffect(() => {
+    try {
+      const t = localStorage.getItem('token')
+      if (t) setState(s => ({ ...s, authed: true }))
+    } catch {}
+  }, [])
 
   React.useEffect(() => {
     let stop = false
@@ -194,7 +202,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800 overflow-x-hidden">
-      <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV_ITEMS as any} authed={state.authed} onSignOut={() => { try { localStorage.removeItem('token') } catch {}; setState(s => ({ ...s, authed: false })) }} />
+      <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV_ITEMS as any} authed={state.authed} isAdmin={isAdmin} onSignOut={() => { try { localStorage.removeItem('token'); localStorage.removeItem('role') } catch {}; setState(s => ({ ...s, authed: false })) }} />
 
       <div className="mx-auto max-w-7xl">
         <main className="px-4 py-8">
@@ -257,7 +265,17 @@ export default function App() {
               }
             />
             <Route path="/mentorship" element={<Mentorship />} />
-            <Route path="/admin" element={<Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} />} />
+            <Route path="/admin" element={isAdmin ? (
+              <Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} />
+            ) : (
+              <div className="rounded-2xl bg-white p-6 text-slate-900">
+                <div className="text-xl font-semibold">Unauthorized</div>
+                <div className="mt-2 text-sm text-slate-600">Please sign in as admin to access this page.</div>
+                <div className="mt-3">
+                  <button className="rounded-full bg-white ring-1 ring-slate-200 px-3 py-1 text-sm" onClick={() => setLoginOpen(true)}>Sign In</button>
+                </div>
+              </div>
+            )} />
             <Route path="/contact" element={<Contact onOpenMessage={() => setContactOpen(true)} />} />
             <Route path="/signup" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
             <Route path="/forgot" element={<Forgot onBack={() => setRoute('signup')} />} />
