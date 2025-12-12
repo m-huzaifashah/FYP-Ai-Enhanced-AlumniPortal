@@ -46,87 +46,107 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
   const [mobileOpen, setMobileOpen] = useState(false)
   const [drawerAnim, setDrawerAnim] = useState(false)
   return (
-    <header className={(mobileOpen ? 'bg-[#E8F4FF]' : 'bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60') + ' sticky top-0 z-40'}>
-      <div className="mx-auto max-w-7xl h-16 px-3 sm:px-6 grid grid-cols-[auto_1fr_auto] items-center">
-        <div className="flex items-center gap-2">
-          <button aria-label="Menu" onClick={() => { setMobileOpen(true); setTimeout(()=>setDrawerAnim(true),0) }} className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 text-slate-700 shadow-sm">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
-          </button>
-          <Logo />
-        </div>
-        <nav className="hidden md:flex items-center justify-center gap-2">
-          {nav.map(([r,label]) => (
-            <button
-              key={r}
-              onClick={() => onNavigate(r)}
-              className={'rounded-full px-3 py-1 text-sm text-slate-700 hover:bg-slate-100 ' + (route===r ? 'bg-slate-100 ring-1 ring-slate-200' : '')}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div className="relative flex items-center justify-end gap-3">
-          <IconButton>
-            <Icon name="bell" />
-          </IconButton>
-          <button onClick={() => setOpen(v=>!v)} className="inline-flex items-center gap-2 rounded-full bg-white ring-1 ring-slate-200 px-2 py-1 shadow-sm">
-            <div className="h-7 w-7 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" />
-            <div className="text-sm text-slate-700">Account</div>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="text-slate-500"><path d="M7 10l5 5 5-5H7z"/></svg>
-          </button>
-           {open && (
-             <div className="absolute right-0 top-12 w-48 rounded-xl bg-white ring-1 ring-slate-200 shadow-lg">
-               {!authed && (
-                 <button onClick={() => { setOpen(false); onOpenLogin() }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Sign In</button>
-               )}
-               {authed && (
-                 <>
-                   <button onClick={() => { setOpen(false); onNavigate('profile') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Profile</button>
-                   <button onClick={() => { setOpen(false); onNavigate('settings') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Settings</button>
-                   <button onClick={() => { setOpen(false); onSignOut && onSignOut() }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Sign Out</button>
-                 </>
-               )}
-             </div>
-           )}
-        </div>
-      </div>
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} />
-          <div className={(drawerAnim ? 'translate-x-0' : '-translate-x-full') + ' absolute left-0 top-0 h-full w-full sm:w-72 sm:max-w-[85vw] bg-[#E8F4FF] ring-1 ring-slate-200 shadow-xl p-4 transition-transform duration-300'}>
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold">Menu</div>
-              <button aria-label="Close" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white ring-1 ring-slate-200">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.225 4.811L4.811 6.225 10.586 12l-5.775 5.775 1.414 1.414L12 13.414l5.775 5.775 1.414-1.414L13.414 12l5.775-5.775-1.414-1.414L12 10.586z"/></svg>
-              </button>
-            </div>
-            <ul className="mt-4 space-y-2">
-              {nav.map(([r,label]) => (
-                <li key={r}>
-                  <button onClick={() => { setMobileOpen(false); onNavigate(r) }} className={'w-full text-left rounded-lg px-3 py-2 text-sm ' + (route===r ? 'bg-[#DCEFFF] ring-1 ring-slate-200 text-slate-900' : 'text-slate-800 hover:bg-[#DCEFFF]')}>
-                    {label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4">
-              {!authed ? (
-                <button onClick={() => { setMobileOpen(false); onOpenLogin() }} className="w-full rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white px-3 py-2 text-sm font-semibold">Sign In</button>
-              ) : (
-                <button onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300); onSignOut && onSignOut() }} className="w-full rounded-lg bg-white ring-1 ring-slate-200 text-slate-800 px-3 py-2 text-sm">Sign Out</button>
-              )}
-            </div>
-            {authed && (
-              <div className="mt-2">
-                <button onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300); onNavigate('profile') }} className="w-full rounded-lg bg-[#DCEFFF] ring-1 ring-slate-200 text-slate-900 px-3 py-2 text-sm">Profile</button>
-              </div>
+    <header className="sticky top-0 z-40">
+      <div className="bg-[#0B4C72] text-white">
+        <div className="mx-auto max-w-7xl h-9 px-3 sm:px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M2 6a3 3 0 013-3h14a3 3 0 013 3v12a3 3 0 01-3 3H5a3 3 0 01-3-3V6zm3-.5a.5.5 0 00-.5.5v.3l7.5 4.3L20.5 6.3V6a.5.5 0 00-.5-.5H5zM20 8.7l-7.9 4.6a1 1 0 01-1 0L3 8.7V18a1 1 0 001 1h16a1 1 0 001-1V8.7z"/></svg>
+            <span>Email: alumni@riphah.edu.pk</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {!authed && (
+              <>
+                <button onClick={onOpenLogin} className="rounded-full bg-black text-white px-3 py-1 text-xs font-semibold">Login</button>
+                <button onClick={() => onNavigate('signup')} className="rounded-full bg-white text-[#0B4C72] px-3 py-1 text-xs font-semibold">Sign Up</button>
+              </>
             )}
-            <div className="mt-6">
-              <Social />
-            </div>
+            {authed && (
+              <button onClick={() => onSignOut && onSignOut()} className="rounded-full bg-white text-[#0B4C72] px-3 py-1 text-xs font-semibold">Sign Out</button>
+            )}
           </div>
         </div>
-      )}
+      </div>
+      <div className={(mobileOpen ? 'bg-[#0B4C72]' : 'bg-[#0B4C72]') + ' text-white'}>
+        <div className="mx-auto max-w-7xl h-16 px-3 sm:px-6 grid grid-cols-[auto_1fr_auto] items-center">
+          <div className="flex items-center gap-2">
+            <button aria-label="Menu" onClick={() => { setMobileOpen(true); setTimeout(()=>setDrawerAnim(true),0) }} className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white shadow-sm">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
+            </button>
+            <Logo />
+          </div>
+          <nav className="hidden md:flex items-center justify-center gap-4">
+            {nav.map(([r,label]) => (
+              <button
+                key={r}
+                onClick={() => onNavigate(r)}
+                className={'px-3 py-1 text-sm hover:text-slate-200 ' + (route===r ? 'underline underline-offset-8' : '')}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+          <div className="relative flex items-center justify-end gap-3">
+            <button onClick={() => onNavigate('contact')} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm">
+              <span>Contact us</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M5 12h12l-4.5 4.5 1.4 1.4L21 12l-7.1-5.9-1.4 1.4L17 12H5z"/></svg>
+            </button>
+            <IconButton>
+              <Icon name="bell" />
+            </IconButton>
+            <button onClick={() => setOpen(v=>!v)} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2 py-1">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" />
+              <div className="text-sm">Account</div>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="opacity-80"><path d="M7 10l5 5 5-5H7z"/></svg>
+            </button>
+             {open && (
+               <div className="absolute right-0 top-12 w-48 rounded-xl bg-white ring-1 ring-slate-200 shadow-lg text-slate-800">
+                 {!authed && (
+                   <button onClick={() => { setOpen(false); onOpenLogin() }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Sign In</button>
+                 )}
+                 {authed && (
+                   <>
+                     <button onClick={() => { setOpen(false); onNavigate('profile') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Profile</button>
+                     <button onClick={() => { setOpen(false); onNavigate('settings') }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Settings</button>
+                     <button onClick={() => { setOpen(false); onSignOut && onSignOut() }} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">Sign Out</button>
+                   </>
+                 )}
+               </div>
+             )}
+          </div>
+        </div>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <div className="absolute inset-0 bg-black/40" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} />
+            <div className={(drawerAnim ? 'translate-x-0' : '-translate-x-full') + ' absolute left-0 top-0 h-full w-full sm:w-72 sm:max-w-[85vw] bg-[#0B4C72] text-white shadow-xl p-4 transition-transform duration-300'}>
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold">Menu</div>
+                <button aria-label="Close" onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.225 4.811L4.811 6.225 10.586 12l-5.775 5.775 1.414 1.414L12 13.414l5.775 5.775 1.414-1.414L13.414 12l5.775-5.775-1.414-1.414L12 10.586z"/></svg>
+                </button>
+              </div>
+              <ul className="mt-4 space-y-2">
+                {nav.map(([r,label]) => (
+                  <li key={r}>
+                    <button onClick={() => { setMobileOpen(false); onNavigate(r) }} className={'w-full text-left rounded-lg px-3 py-2 text-sm ' + (route===r ? 'bg-white/10' : 'hover:bg-white/10')}>
+                      {label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4">
+                {!authed ? (
+                  <button onClick={() => { setMobileOpen(false); onOpenLogin() }} className="w-full rounded-lg bg-white text-[#0B4C72] px-3 py-2 text-sm font-semibold">Sign In</button>
+                ) : (
+                  <button onClick={() => { setDrawerAnim(false); setTimeout(()=>setMobileOpen(false),300); onSignOut && onSignOut() }} className="w-full rounded-lg bg-white text-[#0B4C72] px-3 py-2 text-sm">Sign Out</button>
+                )}
+              </div>
+              <div className="mt-6">
+                <Social />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   )
 }
