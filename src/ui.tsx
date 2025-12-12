@@ -60,37 +60,36 @@ export function Reveal({ children, delay = 0 }: { children: React.ReactNode; del
 
 export function IconCard({ title, src, description, onClick }: { title: string; src: string; description?: string; onClick?: () => void }) {
   return (
-    <div onClick={onClick} className="group cursor-pointer rounded-2xl overflow-hidden h-full backdrop-blur-sm bg-white/60 ring-1 ring-white/60 shadow-sm transition-transform duration-200 hover:-translate-y-[2px] hover:shadow-lg">
-      <div className="p-5 h-full flex flex-col">
-        <div className="h-32 grid place-items-center rounded-xl bg-white/70">
-          <img
-            src={src}
-            alt={title}
-            className="h-24 w-auto object-contain"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://placehold.co/160x112/0B4C72/FFFFFF?text=${encodeURIComponent(title.split(' ')[0])}` }}
-          />
-        </div>
-        <div className="mt-4 rounded-md bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-3 py-2 text-center text-white text-sm font-semibold">
-          {title}
-        </div>
+    <div onClick={onClick} className="cursor-pointer rounded-2xl overflow-hidden bg-white ring-1 ring-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
+      <img
+        src={src}
+        alt={title}
+        className="w-full h-48 md:h-56 object-contain rounded-t-2xl bg-[#F8F5EE]"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://placehold.co/900x360/F8F5EE/0B4C72?text=${encodeURIComponent(title.split(' ')[0])}` }}
+      />
+      <div className="p-5 md:p-6 text-center">
+        <div className="text-lg md:text-xl font-semibold text-slate-900">{title}</div>
         {description && (
-          <p className="mt-3 text-center text-slate-700 text-sm leading-relaxed">
+          <p className="mt-2 text-sm md:text-base text-slate-700 leading-relaxed">
             {description}
           </p>
         )}
-        <div className="mt-auto" />
       </div>
     </div>
   )
 }
 
-export function Button({ children, onClick, variant = 'primary', className = '' }: { children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'outline' | 'subtle'; className?: string }) {
+export function Button({ children, onClick, variant = 'primary', className = '' }: { children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'outline' | 'subtle' | 'brand' | 'outlineWhite'; className?: string }) {
   const base = 'inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition shadow-sm active:translate-y-[1px]'
   const styles =
     variant === 'primary'
-      ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white hover:brightness-105'
+      ? 'bg-gradient-to-r from-[#304FFD] via-[#6D3CF7] to-[#00C2D2] text-white hover:brightness-105'
       : variant === 'outline'
       ? 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'
+      : variant === 'brand'
+      ? 'bg-[#0B4C72] text-slate-900 hover:brightness-[1.05]'
+      : variant === 'outlineWhite'
+      ? 'bg-transparent text-white ring-2 ring-white hover:bg-white/10'
       : 'bg-white/70 text-slate-800 ring-1 ring-slate-200'
   return (
     <button onClick={onClick} className={`${base} ${styles} transition-transform duration-150 hover:scale-[1.02] ${className}`}>{children}</button>
