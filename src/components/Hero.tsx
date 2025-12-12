@@ -20,9 +20,15 @@ export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: 
             <p className="mx-auto mt-4 max-w-3xl text-white/80">A premium alumni experience for careers, mentorship, and events—powered by a modern university brand.</p>
           </Reveal>
           <Reveal delay={200}>
-            <div className="mt-8 flex items-center justify-center gap-3">
-              <Button variant="primary" onClick={() => onNavigate('contact')}>Get Started</Button>
-              <Button variant="outline" onClick={() => onNavigate('events')}>Browse Events</Button>
+            <div className="mt-12 md:mt-14 flex items-center justify-center gap-3">
+              <Button variant="brand" onClick={() => onNavigate('contact')}>
+                About Us
+                <span className="ml-2 text-slate-900">→</span>
+              </Button>
+              <Button variant="outlineWhite" onClick={() => onNavigate('events')}>
+                All Events
+                <span className="ml-2 text-white">→</span>
+              </Button>
             </div>
           </Reveal>
         </div>
