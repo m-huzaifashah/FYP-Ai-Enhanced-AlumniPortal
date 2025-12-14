@@ -1,7 +1,24 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Reveal, Button } from '../ui'
 
 export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: (route: 'contact' | 'events') => void; image?: string }) {
+  const PHRASES = useMemo(() => ([
+    'Build Meaningful Connections',
+    'Grow with Mentorship',
+    'Unlock Career Opportunities',
+  ]), [])
+  const [idx, setIdx] = useState(0)
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    const t = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setIdx(i => (i + 1) % PHRASES.length)
+        setVisible(true)
+      }, 400)
+    }, 3200)
+    return () => clearInterval(t)
+  }, [PHRASES.length])
   return (
     <div className="relative group rounded-3xl overflow-hidden ring-1 ring-white/30 shadow-lg hover:shadow-xl h-[500px] transition-transform duration-700">
       <img
@@ -14,7 +31,7 @@ export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: 
       <div className="absolute inset-0 grid place-items-center px-8 text-center text-white">
         <div>
           <Reveal>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight transition-transform duration-700 ease-out group-hover:scale-[1.03] group-hover:-translate-y-[2px]">Build Meaningful Connections</h1>
+            <h1 className={(visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2') + ' text-4xl md:text-6xl font-extrabold tracking-tight transition-[opacity,transform] duration-400 ease-out group-hover:scale-[1.03] group-hover:-translate-y-[2px]'}>{PHRASES[idx]}</h1>
           </Reveal>
           <Reveal delay={100}>
             <p className="mx-auto mt-4 max-w-3xl text-white/80">A premium alumni experience for careers, mentorship, and events—powered by a modern university brand.</p>

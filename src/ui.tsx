@@ -60,12 +60,12 @@ export function Reveal({ children, delay = 0 }: { children: React.ReactNode; del
 
 export function IconCard({ title, src, description, onClick }: { title: string; src: string; description?: string; onClick?: () => void }) {
   return (
-    <div onClick={onClick} className="cursor-pointer rounded-2xl overflow-hidden bg-white ring-1 ring-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
+    <div onClick={onClick} className="cursor-pointer rounded-2xl overflow-hidden bg-slate-50 ring-1 ring-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
       <img
         src={src}
         alt={title}
-        className="w-full h-48 md:h-56 object-contain rounded-t-2xl bg-[#F8F5EE]"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://placehold.co/900x360/F8F5EE/0B4C72?text=${encodeURIComponent(title.split(' ')[0])}` }}
+        className="w-full h-48 md:h-56 object-contain rounded-t-2xl bg-slate-100"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://placehold.co/900x360/F1F5F9/0B4C72?text=${encodeURIComponent(title.split(' ')[0])}` }}
       />
       <div className="p-5 md:p-6 text-center">
         <div className="text-lg md:text-xl font-semibold text-slate-900">{title}</div>

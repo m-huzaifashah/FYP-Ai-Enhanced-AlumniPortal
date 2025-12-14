@@ -36,7 +36,7 @@ export default function Dashboard({ onNavigate, featured }: { onNavigate: (route
 
       <div className="grid gap-8">
         <Reveal>
-          <div className="rounded-2xl bg-white p-6 text-slate-900">
+          <div className="rounded-2xl bg-indigo-50 p-6 text-slate-900">
             <div className="text-2xl font-bold">About Riphah</div>
             <ul className="mt-4 space-y-3 text-sm">
               <li>Riphah International University, Islamabad is a private university, chartered by the Federal Government of Pakistan in 2002.</li>
