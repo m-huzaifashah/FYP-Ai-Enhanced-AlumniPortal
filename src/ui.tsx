@@ -79,7 +79,7 @@ export function IconCard({ title, src, description, onClick }: { title: string; 
   )
 }
 
-export function Button({ children, onClick, variant = 'primary', className = '' }: { children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'outline' | 'subtle' | 'brand' | 'outlineWhite'; className?: string }) {
+export function Button({ children, onClick, variant = 'primary', className = '', disabled = false }: { children: React.ReactNode; onClick?: () => void; variant?: 'primary' | 'outline' | 'subtle' | 'brand' | 'outlineWhite'; className?: string; disabled?: boolean }) {
   const base = 'inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition shadow-sm active:translate-y-[1px]'
   const styles =
     variant === 'primary'
@@ -92,7 +92,7 @@ export function Button({ children, onClick, variant = 'primary', className = '' 
       ? 'bg-transparent text-white ring-2 ring-white hover:bg-white/10'
       : 'bg-white/70 text-slate-800 ring-1 ring-slate-200'
   return (
-    <button onClick={onClick} className={`${base} ${styles} transition-transform duration-150 hover:scale-[1.02] ${className}`}>{children}</button>
+    <button disabled={disabled} onClick={onClick} className={`${base} ${styles} transition-transform duration-150 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${className}`}>{children}</button>
   )
 }
 
@@ -108,7 +108,7 @@ export function IconButton({ children, onClick, className = '' }: { children: Re
   return <button onClick={onClick} className={`inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 text-slate-700 hover:ring-blue-400 shadow-sm transition-transform duration-150 hover:scale-[1.05] ${className}`}>{children}</button>
 }
 
-export function Icon({ name, className = '' }: { name: 'bell' | 'calendar' | 'close' | 'twitter' | 'linkedin' | 'facebook'; className?: string }) {
+export function Icon({ name, className = '' }: { name: 'bell' | 'calendar' | 'close' | 'twitter' | 'linkedin' | 'facebook' | 'shield'; className?: string }) {
   const props = { width: 16, height: 16, fill: 'currentColor' }
   if (name === 'bell') return (
     <svg viewBox="0 0 24 24" {...props} className={className}><path d="M12 2a6 6 0 016 6v3.1l1.4 2.8c.2.4 0 .9-.5 1H5.1c-.5 0-.8-.6-.6-1l1.5-2.8V8a6 6 0 016-6zm0 20a2.5 2.5 0 01-2.2-1.4h4.4A2.5 2.5 0 0112 22z"/></svg>
@@ -124,6 +124,9 @@ export function Icon({ name, className = '' }: { name: 'bell' | 'calendar' | 'cl
   )
   if (name === 'linkedin') return (
     <svg viewBox="0 0 24 24" {...props} className={className}><path d="M4.98 3.5A2.5 2.5 0 102.5 6a2.5 2.5 0 002.48-2.5zM3 8h4v13H3V8zm7 0h3.7v1.8h.05A4.06 4.06 0 0118.5 8c3.46 0 4.1 2.28 4.1 5.25V21h-4v-6.3c0-1.5-.03-3.43-2.09-3.43-2.1 0-2.42 1.63-2.42 3.32V21h-4V8z"/></svg>
+  )
+  if (name === 'shield') return (
+    <svg viewBox="0 0 24 24" {...props} className={className}><path d="M12 2l7 4v6c0 5-3.5 7.7-7 10-3.5-2.3-7-5-7-10V6l7-4zm0 3.1L7 6.8v5.1c0 3.9 2.6 6.2 5 7.8 2.4-1.6 5-3.9 5-7.8V6.8l-5-1.7z"/></svg>
   )
   return (
     <svg viewBox="0 0 24 24" {...props} className={className}><path d="M22 12a10 10 0 11-20 0 10 10 0 1120 0zm-6-4h-2v2H9v2h5v2h2v-2h2v-2h-2V8z"/></svg>

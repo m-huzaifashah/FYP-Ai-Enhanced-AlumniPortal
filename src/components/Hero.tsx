@@ -8,17 +8,23 @@ export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: 
     'Unlock Career Opportunities',
   ]), [])
   const [idx, setIdx] = useState(0)
-  const [visible, setVisible] = useState(true)
+  const [typed, setTyped] = useState('')
+  const [deleting, setDeleting] = useState(false)
   useEffect(() => {
-    const t = setInterval(() => {
-      setVisible(false)
-      setTimeout(() => {
-        setIdx(i => (i + 1) % PHRASES.length)
-        setVisible(true)
-      }, 400)
-    }, 3200)
-    return () => clearInterval(t)
-  }, [PHRASES.length])
+    const full = PHRASES[idx]
+    let timeout = deleting ? 40 : 80
+    let timer
+    if (!deleting && typed !== full) {
+      timer = setTimeout(() => setTyped(full.slice(0, typed.length + 1)), timeout)
+    } else if (!deleting && typed === full) {
+      timer = setTimeout(() => setDeleting(true), 1000)
+    } else if (deleting && typed !== '') {
+      timer = setTimeout(() => setTyped(full.slice(0, typed.length - 1)), timeout)
+    } else if (deleting && typed === '') {
+      timer = setTimeout(() => { setDeleting(false); setIdx(i => (i + 1) % PHRASES.length) }, 300)
+    }
+    return () => { if (timer) clearTimeout(timer) }
+  }, [typed, deleting, idx, PHRASES])
   return (
     <div className="relative group rounded-3xl overflow-hidden ring-1 ring-white/30 shadow-lg hover:shadow-xl h-[500px] transition-transform duration-700">
       <img
@@ -31,7 +37,10 @@ export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: 
       <div className="absolute inset-0 grid place-items-center px-8 text-center text-white">
         <div>
           <Reveal>
-            <h1 className={(visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2') + ' text-4xl md:text-6xl font-extrabold tracking-tight transition-[opacity,transform] duration-400 ease-out group-hover:scale-[1.03] group-hover:-translate-y-[2px]'}>{PHRASES[idx]}</h1>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight transition-transform duration-700 ease-out group-hover:scale-[1.03] group-hover:-translate-y-[2px]">
+              {typed}
+              <span className="inline-block align-middle w-[2px] h-[1em] bg-white blink-caret ml-1" />
+            </h1>
           </Reveal>
           <Reveal delay={100}>
             <p className="mx-auto mt-4 max-w-3xl text-white/80">A premium alumni experience for careers, mentorship, and events—powered by a modern university brand.</p>
