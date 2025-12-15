@@ -1,5 +1,5 @@
 import React from 'react'
-import { Reveal, IconCard } from '../ui'
+import { Reveal, IconCard, Button } from '../ui'
 
 type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
 
@@ -41,32 +41,32 @@ export default function Services({
             <p className="mt-2 text-slate-200 max-w-2xl">Discover exclusive resources, benefits, and programs designed to empower alumni, strengthen connections, and celebrate achievements.</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="rounded-md bg-white/90 text-slate-900 px-4 py-2 text-sm font-medium" onClick={() => onOpenService('login')}>Get Started</button>
-            <button className="rounded-md bg-black/30 text-white px-4 py-2 text-sm font-medium" onClick={() => onOpenService('contact')}>Contact Us</button>
+            <Button variant="primary" onClick={() => onOpenService('login')}>Get Started</Button>
+            <Button variant="outlineWhite" onClick={() => onOpenService('contact')}>Contact Us</Button>
           </div>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-3 text-center">
-          <div className="rounded-xl bg-white/10 p-3">
+          <div className="rounded-xl ring-1 ring-white/30 bg-white/10 p-3">
             <div className="text-xs text-white/80">Available Services</div>
             <div className="text-xl font-semibold">{services.length}</div>
           </div>
-          <div className="rounded-xl bg-white/10 p-3">
+          <div className="rounded-xl ring-1 ring-white/30 bg-white/10 p-3">
             <div className="text-xs text-white/80">Categories</div>
             <div className="text-xl font-semibold">4</div>
           </div>
-          <div className="rounded-xl bg-white/10 p-3">
+          <div className="rounded-xl ring-1 ring-white/30 bg-white/10 p-3">
             <div className="text-xs text-white/80">New & Featured</div>
             <div className="text-xl font-semibold">Spotlight</div>
           </div>
         </div>
       </div>
 
-      <div className="relative flex items-center gap-3">
+      <div className="relative flex items:center gap-3">
         <input
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="Search services"
-          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:outline-none hover:border-slate-400"
+          className="w-full rounded-lg ring-1 ring-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:outline-none hover:ring-slate-300"
         />
         <svg
           className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none"
@@ -88,7 +88,9 @@ export default function Services({
           <button
             key={c}
             onClick={() => onCategoryChange(c)}
-            className={(category===c ? 'bg-[#0B4C72] text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200') + ' rounded-full px-3 py-1 text-sm shadow-sm'}
+            className={(category===c
+              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white'
+              : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50') + ' rounded-full px-3 py-1 text-sm shadow-sm'}
           >{c}</button>
         ))}
       </div>
