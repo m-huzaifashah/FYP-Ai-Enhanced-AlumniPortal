@@ -68,7 +68,7 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
           </div>
           <div className="hidden lg:block p-8">
             <div className="h-full grid place-items-center">
-              <img src="/public/signup.png" alt="Signup Illustration" className="w-full h-auto rounded-md" />
+              <img src="/signup.png" alt="Signup Illustration" className="w-full h-auto rounded-md" />
             </div>
           </div>
         </div>
