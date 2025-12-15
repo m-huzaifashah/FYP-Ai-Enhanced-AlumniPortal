@@ -104,8 +104,9 @@ export function Card({ children, className = '' }: { children: React.ReactNode; 
   return <div className={`rounded-2xl bg-white/70 ring-1 ring-slate-200 shadow-sm backdrop-blur-sm transition-transform duration-200 hover:-translate-y-[2px] hover:shadow-lg ${className}`}>{children}</div>
 }
 
-export function IconButton({ children, onClick, className = '' }: { children: React.ReactNode; onClick?: () => void; className?: string }) {
-  return <button onClick={onClick} className={`inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 text-slate-700 hover:ring-blue-400 shadow-sm transition-transform duration-150 hover:scale-[1.05] ${className}`}>{children}</button>
+export function IconButton(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode; className?: string }) {
+  const { children, className = '', ...rest } = props
+  return <button {...rest} className={`inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 text-slate-700 hover:ring-blue-400 shadow-sm transition-transform duration-150 hover:scale-[1.05] ${className}`}>{children}</button>
 }
 
 export function Icon({ name, className = '' }: { name: 'bell' | 'calendar' | 'close' | 'twitter' | 'linkedin' | 'facebook' | 'shield'; className?: string }) {
