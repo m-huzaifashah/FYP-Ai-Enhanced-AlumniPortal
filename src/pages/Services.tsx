@@ -45,6 +45,20 @@ export default function Services({
             <button className="rounded-md bg-black/30 text-white px-4 py-2 text-sm font-medium" onClick={() => onOpenService('contact')}>Contact Us</button>
           </div>
         </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3 text-center">
+          <div className="rounded-xl bg-white/10 p-3">
+            <div className="text-xs text-white/80">Available Services</div>
+            <div className="text-xl font-semibold">{services.length}</div>
+          </div>
+          <div className="rounded-xl bg-white/10 p-3">
+            <div className="text-xs text-white/80">Categories</div>
+            <div className="text-xl font-semibold">4</div>
+          </div>
+          <div className="rounded-xl bg-white/10 p-3">
+            <div className="text-xs text-white/80">New & Featured</div>
+            <div className="text-xl font-semibold">Spotlight</div>
+          </div>
+        </div>
       </div>
 
       <div className="relative flex items-center gap-3">
@@ -69,10 +83,26 @@ export default function Services({
         </svg>
       </div>
 
+      <div className="flex items-center flex-wrap gap-2">
+        {(['All','Career','Community','Benefits','Support'] as const).map(c => (
+          <button
+            key={c}
+            onClick={() => onCategoryChange(c)}
+            className={(category===c ? 'bg-[#0B4C72] text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200') + ' rounded-full px-3 py-1 text-sm shadow-sm'}
+          >{c}</button>
+        ))}
+      </div>
+
+      {services.length === 0 && (
+        <div className="rounded-xl bg-white ring-1 ring-slate-200 p-4 text-sm text-slate-700">No services match your search or category.</div>
+      )}
+
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {services.map(s => (
           <li key={s.id}>
-            <IconCard title={s.title} src={SERVICE_IMAGES[s.id] || SERVICE_IMAGES.login} onClick={() => onOpenService(s.id)} />
+            <Reveal>
+              <IconCard title={s.title} description={s.description} src={SERVICE_IMAGES[s.id] || SERVICE_IMAGES.login} onClick={() => onOpenService(s.id)} />
+            </Reveal>
           </li>
         ))}
       </ul>
