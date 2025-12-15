@@ -13,3 +13,11 @@ html, body, #root { height: 100%; }
   background-size: 200% 200%;
   animation: pan 14s linear infinite;
 }
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.blink-caret {
+  animation: blink 1s step-end infinite;
+}

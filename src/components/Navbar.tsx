@@ -45,7 +45,7 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
   const [open, setOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [drawerAnim, setDrawerAnim] = useState(false)
-  const visibleNav = (isAdmin ? nav : nav.filter(([r]) => r !== 'admin'))
+  const visibleNav = nav
   return (
     <header className="sticky top-0 z-40">
       <div className="bg-[#0B4C72] text-white">
@@ -93,6 +93,9 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
             </button>
             <IconButton>
               <Icon name="bell" />
+            </IconButton>
+            <IconButton onClick={() => onNavigate('admin')}>
+              <Icon name="shield" />
             </IconButton>
             <button onClick={() => setOpen(v=>!v)} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2 py-1">
               <div className="h-7 w-7 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" />
