@@ -116,17 +116,9 @@ export default function AppRoutes({
         }
       />
       <Route path="/mentorship" element={<Mentorship />} />
-      <Route path="/admin" element={isAdmin ? (
+      <Route path="/admin" element={
         <Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} />
-      ) : (
-        <div className="rounded-2xl bg-white p-6 text-slate-900">
-          <div className="text-xl font-semibold">Unauthorized</div>
-          <div className="mt-2 text-sm text-slate-600">Please sign in as admin to access this page.</div>
-          <div className="mt-3">
-            <button className="rounded-full bg-white ring-1 ring-slate-200 px-3 py-1 text-sm" onClick={() => setLoginOpen(true)}>Sign In</button>
-          </div>
-        </div>
-      )} />
+      } />
       <Route path="/contact" element={<Contact onOpenMessage={() => setContactOpen(true)} />} />
       <Route path="/signup" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
       <Route path="/forgot" element={<Forgot onBack={() => setRoute('signup')} />} />

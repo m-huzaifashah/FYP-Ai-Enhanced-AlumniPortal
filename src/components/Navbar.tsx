@@ -87,10 +87,12 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
             ))}
           </nav>
           <div className="relative flex items-center justify-end gap-3">
-            <button onClick={() => onNavigate('contact')} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm">
-              <span>Contact us</span>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M5 12h12l-4.5 4.5 1.4 1.4L21 12l-7.1-5.9-1.4 1.4L17 12H5z"/></svg>
-            </button>
+            {route !== 'contact' && (
+              <button onClick={() => onNavigate('contact')} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm">
+                <span>Contact us</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M5 12h12l-4.5 4.5 1.4 1.4L21 12l-7.1-5.9-1.4 1.4L17 12H5z"/></svg>
+              </button>
+            )}
             <IconButton>
               <Icon name="bell" />
             </IconButton>
