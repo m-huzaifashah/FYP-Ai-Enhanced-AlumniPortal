@@ -1,7 +1,12 @@
 import React from 'react'
 import { Reveal, IconCard, Button } from '../ui'
 
-type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
+type Service = {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Career' | 'Community' | 'Benefits' | 'Support'
+}
 
 export default function Services({
   services,
@@ -84,11 +89,11 @@ export default function Services({
       </div>
 
       <div className="flex items-center flex-wrap gap-2">
-        {(['All','Career','Community','Benefits','Support'] as const).map(c => (
+        {(['All', 'Career', 'Community', 'Benefits', 'Support'] as const).map(c => (
           <button
             key={c}
             onClick={() => onCategoryChange(c)}
-            className={(category===c
+            className={(category === c
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white'
               : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50') + ' rounded-full px-3 py-1 text-sm shadow-sm'}
           >{c}</button>
