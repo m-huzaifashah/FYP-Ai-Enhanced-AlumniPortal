@@ -41,6 +41,47 @@ function Social() {
   )
 }
 
+function HomeDropdown({ onNavigate, route }: { onNavigate: (r: string) => void; route: string }) {
+  const [open, setOpen] = useState(false)
+  const isActive = route === 'dashboard' || route === 'services'
+
+  const scrollToSection = (id: string) => {
+    if (route !== 'dashboard') {
+      onNavigate('dashboard')
+      setTimeout(() => {
+        const el = document.getElementById(id)
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    } else {
+      const el = document.getElementById(id)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+    setOpen(false)
+  }
+
+  return (
+    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button
+        onClick={() => onNavigate('dashboard')}
+        className={'px-3 py-1 text-sm hover:text-slate-200 flex items-center gap-1 ' + (isActive ? 'underline underline-offset-8' : '')}
+      >
+        Home
+        <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 w-48 bg-white text-slate-800 rounded-md shadow-lg py-2 z-50">
+          <button onClick={(e) => { e.stopPropagation(); scrollToSection('reviews') }} className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100">What Alumni Say</button>
+          <button onClick={(e) => { e.stopPropagation(); scrollToSection('stories') }} className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100">Our Stories</button>
+          <button onClick={(e) => { e.stopPropagation(); scrollToSection('about') }} className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100">About</button>
+          <button onClick={(e) => { e.stopPropagation(); scrollToSection('why-join-us') }} className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100">Why Join Us</button>
+          <div className="h-px bg-slate-100 my-1" />
+          <button onClick={(e) => { e.stopPropagation(); onNavigate('services'); setOpen(false) }} className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100">Services</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = false, isAdmin = false, onSignOut }: { route: string; onNavigate: (r: string) => void; onOpenLogin: () => void; nav: [string,string][]; authed?: boolean; isAdmin?: boolean; onSignOut?: () => void }) {
   const [open, setOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -48,21 +89,21 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
   const visibleNav = (isAdmin ? nav : nav.filter(([r]) => r !== 'admin'))
   return (
     <header className="sticky top-0 z-40">
-      <div className="bg-[#0B4C72] text-white">
+      <div className="bg-white text-slate-600 border-b border-slate-200">
         <div className="mx-auto max-w-7xl h-9 px-3 sm:px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M2 6a3 3 0 013-3h14a3 3 0 013 3v12a3 3 0 01-3 3H5a3 3 0 01-3-3V6zm3-.5a.5.5 0 00-.5.5v.3l7.5 4.3L20.5 6.3V6a.5.5 0 00-.5-.5H5zM20 8.7l-7.9 4.6a1 1 0 01-1 0L3 8.7V18a1 1 0 001 1h16a1 1 0 001-1V8.7z"/></svg>
+          <div className="flex items-center gap-2 text-xs font-medium">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" className="text-[#0B4C72]"><path d="M2 6a3 3 0 013-3h14a3 3 0 013 3v12a3 3 0 01-3 3H5a3 3 0 01-3-3V6zm3-.5a.5.5 0 00-.5.5v.3l7.5 4.3L20.5 6.3V6a.5.5 0 00-.5-.5H5zM20 8.7l-7.9 4.6a1 1 0 01-1 0L3 8.7V18a1 1 0 001 1h16a1 1 0 001-1V8.7z"/></svg>
             <span>Email: alumni@riphah.edu.pk</span>
           </div>
           <div className="flex items-center gap-2">
             {!authed && (
               <>
-                <button onClick={onOpenLogin} className="rounded-full bg-black text-white px-3 py-1 text-xs font-semibold">Login</button>
-                <button onClick={() => onNavigate('signup')} className="rounded-full bg-white text-[#0B4C72] px-3 py-1 text-xs font-semibold">Sign Up</button>
+                <button onClick={onOpenLogin} className="rounded-full text-slate-600 hover:text-[#0B4C72] px-3 py-1 text-xs font-bold">Login</button>
+                <button onClick={() => onNavigate('signup')} className="rounded-full bg-[#0B4C72] text-white px-3 py-1 text-xs font-semibold hover:bg-[#093c5a]">Sign Up</button>
               </>
             )}
             {authed && (
-              <button onClick={() => onSignOut && onSignOut()} className="rounded-full bg-white text-[#0B4C72] px-3 py-1 text-xs font-semibold">Sign Out</button>
+              <button onClick={() => onSignOut && onSignOut()} className="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold hover:bg-slate-200">Sign Out</button>
             )}
           </div>
         </div>
@@ -76,15 +117,19 @@ export default function Navbar({ route, onNavigate, onOpenLogin, nav, authed = f
             <Logo />
           </div>
           <nav className="hidden md:flex items-center justify-center gap-4">
-            {visibleNav.map(([r,label]) => (
-              <button
-                key={r}
-                onClick={() => onNavigate(r)}
-                className={'px-3 py-1 text-sm hover:text-slate-200 ' + (route===r ? 'underline underline-offset-8' : '')}
-              >
-                {label}
-              </button>
-            ))}
+            {visibleNav.map(([r,label]) => {
+              if (r === 'dashboard') return <HomeDropdown key={r} onNavigate={onNavigate} route={route} />
+              if (r === 'services') return null
+              return (
+                <button
+                  key={r}
+                  onClick={() => onNavigate(r)}
+                  className={'px-3 py-1 text-sm hover:text-slate-200 ' + (route===r ? 'underline underline-offset-8' : '')}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </nav>
           <div className="relative flex items-center justify-end gap-3">
             {/* {route !== 'contact' && (
