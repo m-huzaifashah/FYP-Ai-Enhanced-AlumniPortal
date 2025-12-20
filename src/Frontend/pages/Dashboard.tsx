@@ -24,32 +24,67 @@ export default function Dashboard({ onNavigate, featured }: { onNavigate: (route
       <Hero onNavigate={onNavigate} image="/hero.jpg" />
 
 
-      <JoinCards
-        items={[
-          { title: 'Attend Events', go: 'events', desc: 'Stay connected with exclusive gatherings, workshops, and reunions.' },
-          { title: 'Advance Your Career', go: 'jobs', desc: 'Access resources, events, and a network to grow professionally.' },
-          { title: 'Reconnect your Friend', go: 'directory', desc: 'Find classmates and relive memories with your alumni network.' },
-        ]}
-        onNavigate={(r) => onNavigate(r as any)}
-        image={RIU_LOGO}
-      />
+      <div id="why-join-us">
+        <JoinCards
+          items={[
+            {
+              title: 'Attend Events',
+              go: 'events',
+              image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=600',
+              desc: 'Stay connected with your alumni community by attending exclusive events designed to inspire, network, and celebrate shared achievements. From reunions and workshops to guest lectures and social gatherings, there’s always something exciting happening. Don’t miss the chance to engage and grow with your fellow alumni!'
+            },
+            {
+              title: 'Advance Your Career',
+              go: 'jobs',
+              image: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=600',
+              desc: 'Take your career to the next level with exclusive resources and opportunities tailored for alumni. Access professional development programs, attend career-focused events, and connect with a network of successful professionals. Empower your journey with guidance, support, and tools to achieve your goals.'
+            },
+            {
+              title: 'Reconnect your Friend',
+              go: 'directory',
+              image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=600',
+              desc: 'Rekindle old friendships and create new memories with your alumni network. Stay in touch with former classmates, share your experiences, and relive cherished moments through our dedicated platform. Strengthen your bonds and celebrate the connections that last a lifetime!'
+            },
+          ]}
+          onNavigate={(r) => onNavigate(r as any)}
+          image={RIU_LOGO}
+        />
+      </div>
 
-      <div className="grid gap-8">
+      <div id="about" className="mt-20">
         <Reveal>
-          <div className="rounded-2xl bg-indigo-50 p-6 text-slate-900">
-            <div className="text-2xl font-bold">About Riphah</div>
-            <ul className="mt-4 space-y-3 text-sm">
-              <li>Riphah International University, Islamabad is a private university, chartered by the Federal Government of Pakistan in 2002.</li>
-
-              <li>The University was established with a view to produce professionals with Islamic moral and ethical values. It is sponsored by Islamic International Medical College Trust (IIMCT), a not-for-profit educational trust established in 1995.</li>
-              <li>Riphah International University, Islamabad was included in "W Category" universities by the Higher Education Commission (HEC) of Pakistan in 2005 and was later included in the top five universities in the private sector, qualifying to receive research grants from the Government of Pakistan through the HEC. Subsequently, Riphah university ranked in the sixth position among private and public sector national universities of medium size with a quality score of 9.70 on the basis of quality assurance and research output criteria set by the HEC. Further, the Quality Enhancement Cell of the University was given first position among the private sector "W Category" universities of Pakistan according to the score card formulated by the HEC. Riphah was the first university in Pakistan to be certified under ISO 9001:2008 Standard by the UK based Lloyd's Register, one of the top five global independent risk management and safety assurance organizations.</li>
-            </ul>
+          <div className="overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-slate-200 md:grid md:grid-cols-2">
+            <div className="relative h-64 w-full bg-[#0B4C72] md:h-full flex items-center justify-center overflow-hidden">
+               <div className="absolute inset-0 opacity-10 bg-center bg-cover" style={{ backgroundImage: `url(${RIU_LOGO})`, filter: 'grayscale(100%)' }} />
+               <div className="relative z-10 p-8 text-center">
+                  <img src={RIU_LOGO} alt="Riphah Logo" className="w-48 h-auto mx-auto brightness-0 invert opacity-90" />
+                  <div className="mt-4 text-white/80 text-lg font-serif italic">Islamic Ethical Values</div>
+               </div>
+            </div>
+            <div className="p-8 md:p-12">
+              <div className="text-sm font-bold uppercase tracking-wider text-[#0B4C72]">About Us</div>
+              <h2 className="mt-2 text-3xl font-bold text-slate-900 md:text-4xl">About Riphah</h2>
+              <div className="mt-8 space-y-6">
+                {[
+                  "Alumni Association provides and supports alumni programs and services, facilitates communication with alumni, and seeks to strengthen alumni bonds of fellowship, professional association and university affiliation.",
+                  "Connect alumni with mentors or coaches who can offer them guidance, advice, or feedback on their personal or professional goals. They can also help them expand their network, explore new opportunities, or overcome challenges.",
+                  "The Alumni Association leverages the resources, talents, and initiatives of alumni and friends to advise, guide, advocate for and support the Association and the university in achieving their respective missions and goals."
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4">
+                    <svg className="mt-1 h-6 w-6 flex-shrink-0 text-[#0B4C72]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <p className="text-slate-600 leading-relaxed text-sm md:text-base">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </Reveal>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <Stories stories={[{ date: 'May 22, 2025', title: 'ABC test' }, { date: 'Dec 31, 2024', title: 'Engineer Nabeeha Malik' }]} image={RIU_LOGO} />
+        <div id="stories">
+          <Stories stories={[{ date: 'May 22, 2025', title: 'ABC test' }, { date: 'Dec 31, 2024', title: 'Engineer Nabeeha Malik' }]} image={RIU_LOGO} />
+        </div>
         <Reveal>
           <Stats />
         </Reveal>
@@ -57,7 +92,7 @@ export default function Dashboard({ onNavigate, featured }: { onNavigate: (route
 
       <div className="grid gap-8 md:grid-cols-2">
         <Reveal>
-          <div className="rounded-2xl bg-white p-6 text-slate-900">
+          <div id="reviews" className="rounded-2xl bg-white p-6 text-slate-900">
             <div className="text-2xl font-bold">What Alumni Say</div>
             <div className="mt-4 relative h-40">
               {TESTIMONIALS.map((t, i) => (
