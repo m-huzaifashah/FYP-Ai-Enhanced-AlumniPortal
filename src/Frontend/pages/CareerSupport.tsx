@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Button, Card, Input, Modal } from '../ui'
+import { Button, Card, Input, Modal } from '../../ui'
 
 type Job = { id: number | string; title: string; company: string; location: string }
 type Internship = { id: number; title: string; company: string; location: string }

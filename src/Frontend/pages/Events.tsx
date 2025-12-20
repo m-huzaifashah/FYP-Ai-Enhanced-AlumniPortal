@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Button, Card, Input, Modal, IconButton, Icon } from '../ui'
-import { getEvents } from '../api'
+import { Button, Card, Input, Modal, IconButton, Icon } from '../../ui'
+import { getEvents } from '../../api'
 
 type Event = { id: number | string; title: string; date: string; location: string; description: string }
 

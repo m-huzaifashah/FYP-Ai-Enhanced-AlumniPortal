@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { postSignup, postLogin } from '../api'
+import { postSignup, postLogin } from '../../api'
 
 export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLogin: () => void; onBack: () => void; onOpenForgot: () => void }) {
   const [name, setName] = useState('')

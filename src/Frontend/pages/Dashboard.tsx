@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Reveal } from '../ui'
+import { Reveal } from '../../ui'
 import Hero from '../components/Hero'
 import JoinCards from '../components/JoinCards'
 import Stories from '../components/Stories'

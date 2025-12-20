@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Modal } from '../ui'
-import { postContact } from '../api'
+import { Modal } from '../../ui'
+import { postContact } from '../../api'
 
 export default function ContactModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [name, setName] = useState('')

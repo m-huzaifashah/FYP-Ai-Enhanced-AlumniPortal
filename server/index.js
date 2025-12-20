@@ -6,11 +6,11 @@ import { MongoClient, ObjectId } from 'mongodb'
 import crypto from 'crypto'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
-import { EVENTS } from '../src/data/events.js'
-import { JOBS } from '../src/data/jobs.js'
-import { MENTORS } from '../src/data/mentors.js'
-import { ALUMNI } from '../src/data/alumni.js'
-import { SERVICES } from '../src/data/services.js'
+import { EVENTS } from '../src/Frontend/data/events.js'
+import { JOBS } from '../src/Frontend/data/jobs.js'
+import { MENTORS } from '../src/Frontend/data/mentors.js'
+import { ALUMNI } from '../src/Frontend/data/alumni.js'
+import { SERVICES } from '../src/Frontend/data/services.js'
 
 const app = express()
 dotenv.config()

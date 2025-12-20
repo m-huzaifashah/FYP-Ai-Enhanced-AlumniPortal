@@ -1,5 +1,5 @@
 import React from 'react'
-import { Reveal, IconCard } from '../ui'
+import { Reveal, IconCard } from '../../ui'
 
 export default function JoinCards({ items, onNavigate, image }: { items: { title: string; go: string; desc?: string }[]; onNavigate: (route: string) => void; image: string }) {
   return (

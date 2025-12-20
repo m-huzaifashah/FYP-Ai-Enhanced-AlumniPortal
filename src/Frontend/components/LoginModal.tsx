@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { postLogin } from '../api'
-import { Modal } from '../ui'
+import { postLogin } from '../../api'
+import { Modal } from '../../ui'
 
 export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, loginPassword, setLoginPassword, loginError, setLoginError, onGoForgot, onGoSignup, onLoggedIn }: { open: boolean; onClose: () => void; loginEmail: string; setLoginEmail: (v: string) => void; loginPassword: string; setLoginPassword: (v: string) => void; loginError: string; setLoginError: (v: string) => void; onGoForgot: () => void; onGoSignup: () => void; onLoggedIn?: () => void }) {
   const [loading, setLoading] = useState(false)

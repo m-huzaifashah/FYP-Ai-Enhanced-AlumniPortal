@@ -1,5 +1,5 @@
 import React from 'react'
-import { Icon } from '../ui'
+import { Icon } from '../../ui'
 
 export default function Footer() {
   const logo = 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png'

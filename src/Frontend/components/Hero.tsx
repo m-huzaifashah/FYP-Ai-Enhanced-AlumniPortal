@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Reveal, Button } from '../ui'
+import { Reveal, Button } from '../../ui'
 
 export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: (route: 'contact' | 'events') => void; image?: string }) {
   const PHRASES = useMemo(() => ([
@@ -13,7 +13,7 @@ export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: 
   useEffect(() => {
     const full = PHRASES[idx]
     let timeout = deleting ? 40 : 80
-    let timer
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (!deleting && typed !== full) {
       timer = setTimeout(() => setTyped(full.slice(0, typed.length + 1)), timeout)
     } else if (!deleting && typed === full) {

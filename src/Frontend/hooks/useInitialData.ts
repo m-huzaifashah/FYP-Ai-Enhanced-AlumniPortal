@@ -1,5 +1,5 @@
 import React from 'react'
-import { getServices, getAlumni, getJobs, getEvents, getHealth } from '../api'
+import { getServices, getAlumni, getJobs, getEvents, getHealth } from '../../api'
 
 export type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
 export type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string }
