@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { IconButton, Icon } from '../ui'
+import { IconButton, Icon } from '../../ui'
 
 function Logo() {
   const [useFallback, setUseFallback] = useState(false)

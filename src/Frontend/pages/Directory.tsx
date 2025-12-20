@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Button, Input, Card } from '../ui'
+import { Button, Input, Card } from '../../ui'
 
 type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string }
 

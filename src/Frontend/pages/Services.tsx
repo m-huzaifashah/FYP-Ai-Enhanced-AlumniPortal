@@ -1,5 +1,5 @@
 import React from 'react'
-import { Reveal, IconCard, Button } from '../ui'
+import { Reveal, IconCard, Button } from '../../ui'
 
 type Service = {
   id: string;

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Reveal, Counter } from '../ui'
+import { Reveal, Counter } from '../../ui'
 
 export default function Stats() {
   return (

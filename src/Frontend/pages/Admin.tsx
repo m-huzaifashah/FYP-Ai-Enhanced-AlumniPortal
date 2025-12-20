@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { Button, Card, Counter, Input, Modal } from '../ui'
-import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob } from '../api'
+import { Button, Card, Counter, Input, Modal } from '../../ui'
+import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob } from '../../api'
 
 type Event = { id: number | string; title: string; date: string; location: string; description: string }
 type Job = { id: number | string; title: string; company: string; location: string; link: string }

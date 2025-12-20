@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { IconCard } from '../ui'
-import { getJobs } from '../api'
+import { IconCard } from '../../ui'
+import { getJobs } from '../../api'
 
 type Job = { id: number | string; title: string; company: string; location: string; link: string }
 

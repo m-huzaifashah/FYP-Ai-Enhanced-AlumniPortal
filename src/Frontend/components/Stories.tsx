@@ -1,5 +1,5 @@
 import React from 'react'
-import { Reveal } from '../ui'
+import { Reveal } from '../../ui'
 
 export default function Stories({ stories, image }: { stories: { date: string; title: string }[]; image: string }) {
   return (

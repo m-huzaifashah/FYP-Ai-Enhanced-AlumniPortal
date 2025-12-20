@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Button, Card, Input, Modal } from '../ui'
-import { getMentors } from '../api'
+import { Button, Card, Input, Modal } from '../../ui'
+import { getMentors } from '../../api'
 
 type Mentor = { id: number; name: string; title: string; company: string; city: string; skills: string[]; type: 'mentor' | 'mentee' }
 
