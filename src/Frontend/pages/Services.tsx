@@ -24,44 +24,39 @@ export default function Services({
   onOpenService: (id: string) => void
 }) {
   const SERVICE_IMAGES: Record<string, string> = {
-    login: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
     jobs: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    mentorship: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
     events: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    contact: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    spotlight: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    'give-back': 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    snapshot: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    advantage: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    email: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    network: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    faqs: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    'message-vc': 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    scholarship: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    transcript: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    card: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    stories: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
+    profile: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
   }
   return (
     <section className="space-y-8">
-      <div className="rounded-2xl bg-[#0B4C72] text-white px-6 py-10">
+      <div className="rounded-2xl bg-[#1669bb] text-white px-6 py-10 shadow-lg">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="text-3xl font-bold">Alumni Services</div>
-            <p className="mt-2 text-slate-200 max-w-2xl">Discover exclusive resources, benefits, and programs designed to empower alumni, strengthen connections, and celebrate achievements.</p>
+            <p className="mt-2 text-blue-100 max-w-2xl">Discover exclusive resources, benefits, and programs designed to empower alumni, strengthen connections, and celebrate achievements.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="primary" onClick={() => onOpenService('login')}>Get Started</Button>
-            <Button variant="outlineWhite" onClick={() => onOpenService('contact')}>Contact Us</Button>
+            <Button variant="outlineWhite" onClick={() => onOpenService('contact')}>Contact Support</Button>
           </div>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3 text-center">
-          <div className="rounded-xl ring-1 ring-white/30 bg-white/10 p-3">
-            <div className="text-xs text-white/80">Available Services</div>
-            <div className="text-xl font-semibold">{services.length}</div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3 text-center">
+          <div className="rounded-xl ring-1 ring-white/20 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="text-xs text-blue-100 uppercase tracking-wider font-semibold">Available Services</div>
+            <div className="text-2xl font-bold mt-1">{services.length}</div>
           </div>
-          <div className="rounded-xl ring-1 ring-white/30 bg-white/10 p-3">
-            <div className="text-xs text-white/80">Categories</div>
-            <div className="text-xl font-semibold">4</div>
+          <div className="rounded-xl ring-1 ring-white/20 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="text-xs text-blue-100 uppercase tracking-wider font-semibold">Categories</div>
+            <div className="text-2xl font-bold mt-1">4</div>
           </div>
-          <div className="rounded-xl ring-1 ring-white/30 bg-white/10 p-3">
-            <div className="text-xs text-white/80">New & Featured</div>
-            <div className="text-xl font-semibold">Spotlight</div>
+          <div className="rounded-xl ring-1 ring-white/20 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="text-xs text-blue-100 uppercase tracking-wider font-semibold">Featured</div>
+            <div className="text-2xl font-bold mt-1">Mentorship</div>
           </div>
         </div>
       </div>
@@ -94,8 +89,8 @@ export default function Services({
             key={c}
             onClick={() => onCategoryChange(c)}
             className={(category === c
-              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white'
-              : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50') + ' rounded-full px-3 py-1 text-sm shadow-sm'}
+              ? 'bg-[#1669bb] text-white shadow-md ring-1 ring-[#1669bb]'
+              : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-[#1669bb] hover:ring-[#1669bb]') + ' rounded-full px-4 py-1.5 text-sm font-medium transition-all'}
           >{c}</button>
         ))}
       </div>
@@ -108,7 +103,7 @@ export default function Services({
         {services.map(s => (
           <li key={s.id}>
             <Reveal>
-              <IconCard title={s.title} description={s.description} src={SERVICE_IMAGES[s.id] || SERVICE_IMAGES.login} onClick={() => onOpenService(s.id)} />
+              <IconCard title={s.title} description={s.description} src={SERVICE_IMAGES[s.id] || SERVICE_IMAGES.jobs} onClick={() => onOpenService(s.id)} />
             </Reveal>
           </li>
         ))}

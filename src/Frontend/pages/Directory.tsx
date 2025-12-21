@@ -48,25 +48,45 @@ export default function Directory({ alumni, query, onQueryChange }: { alumni: Al
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pageRows.map(a => (
           <li key={a.id}>
-            <Card className="p-4 group relative overflow-hidden">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 grid place-items-center text-white text-sm font-semibold">
+            <Card className="p-5 group relative overflow-hidden transition-all hover:shadow-md border-slate-200">
+              <div className="flex items-start gap-4">
+                <div className="h-14 w-14 shrink-0 rounded-full bg-[#1669bb] text-white grid place-items-center text-lg font-bold shadow-sm ring-4 ring-slate-50">
                   {a.name.split(' ').map(n=>n[0]).join('').slice(0,2)}
                 </div>
-                <div className="flex-1">
-                  <div className="text-base font-semibold">{a.name}</div>
-                  <div className="text-sm text-slate-600">{a.role} • {a.company}</div>
-                  <div className="text-xs text-slate-500">{a.department} • {a.batch} • {a.location}</div>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-lg font-bold text-slate-900 truncate">{a.name}</div>
+                      <div className="text-sm font-medium text-[#1669bb] truncate">{a.role}</div>
+                      <div className="text-sm text-slate-500 truncate">{a.company}</div>
+                    </div>
+                    <Button variant="outline" size="sm" className="shrink-0 border-slate-200 text-slate-600 hover:text-[#1669bb] hover:border-[#1669bb]">
+                      Contact
+                    </Button>
+                  </div>
+                  
+                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                      {a.department}
+                    </span>
+                    <span>•</span>
+                    <span>{a.batch}</span>
+                    <span>•</span>
+                    <span>{a.location}</span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {[a.department, a.role.split(' ')[0]].map((t,i)=> (
-                      <span key={i} className="rounded-full bg-white px-2 py-1 text-xs ring-1 ring-slate-200 text-slate-700 shadow-sm">{t}</span>
+                      <span key={i} className="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+                        {t}
+                      </span>
                     ))}
                   </div>
                 </div>
-                <Button variant="outline" className="whitespace-nowrap">Contact</Button>
               </div>
-              <div className="absolute inset-0 hidden group-hover:grid place-items-center bg-black/5">
-                <Button variant="primary" className="">View Profile</Button>
+              <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] transition-all duration-300">
+                <Button variant="primary" className="shadow-xl transform hover:scale-105">View Profile</Button>
               </div>
             </Card>
           </li>

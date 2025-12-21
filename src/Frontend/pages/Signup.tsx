@@ -6,6 +6,8 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [role, setRole] = useState<'student'| 'alumni'>('student')
+  const [secret, setSecret] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const RIU_LOGO = 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png'
@@ -17,12 +19,13 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
     if (!nameOk || !emailOk || !passOk) { setError('Fill all fields correctly'); setSuccess(''); return }
     setError('')
     try {
-      const payload: any = { name: name.trim(), email: email.trim(), password, role: 'student' }
+      const payload: any = { name: name.trim(), email: email.trim(), password, secret }
       const data = await postSignup(payload)
       try {
         const { token, user } = await postLogin(email.trim(), password)
         try { localStorage.setItem('token', token) } catch {}
         try { localStorage.setItem('role', user.role) } catch {}
+        try { localStorage.setItem('email', user.email) } catch {}
         setSuccess('Account created and signed in.')
       } catch (e) {
         setSuccess('Account created. You can sign in now.')
@@ -53,10 +56,31 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
             <div className="mt-6 space-y-3">
               {error && <div className="rounded-md bg-red-100 text-red-700 text-sm px-3 py-2">{error}</div>}
               {success && <div className="rounded-md bg-green-100 text-green-700 text-sm px-3 py-2">{success}</div>}
+
+              <div className="flex gap-2 justify-center pb-2">
+                {(['student', 'alumni'] as const).map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRole(r)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      role === r 
+                        ? 'bg-[#0B4C72] text-white shadow-md scale-105' 
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span className="capitalize">{r}</span>
+                  </button>
+                ))}
+              </div>
+
               <input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Full Name" />
               <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="your@email.com" />
               <input value={password} onChange={e=>setPassword(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Enter Password" type="password" />
               <input value={confirm} onChange={e=>setConfirm(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Confirm Password" type="password" />
+              
+              
+
               <div className="text-right text-sm">
                 <button onClick={onOpenForgot} className="text-[#0B4C72]">Forgot Password ?</button>
               </div>

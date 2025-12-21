@@ -1,64 +1,72 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Reveal, Button } from '../../ui'
+import React, { useEffect, useState } from 'react'
+import { Reveal } from '../../ui'
 
-export default function Hero({ onNavigate, image = '/hero.jpg' }: { onNavigate: (route: 'contact' | 'events') => void; image?: string }) {
-  const PHRASES = useMemo(() => ([
-    'Build Meaningful Connections',
-    'Grow with Mentorship',
-    'Unlock Career Opportunities',
-  ]), [])
-  const [idx, setIdx] = useState(0)
-  const [typed, setTyped] = useState('')
-  const [deleting, setDeleting] = useState(false)
+export default function Hero({ onNavigate }: { onNavigate: (route: 'contact' | 'events') => void; image?: string }) {
+  const [offset, setOffset] = useState(0)
+
   useEffect(() => {
-    const full = PHRASES[idx]
-    let timeout = deleting ? 40 : 80
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (!deleting && typed !== full) {
-      timer = setTimeout(() => setTyped(full.slice(0, typed.length + 1)), timeout)
-    } else if (!deleting && typed === full) {
-      timer = setTimeout(() => setDeleting(true), 1000)
-    } else if (deleting && typed !== '') {
-      timer = setTimeout(() => setTyped(full.slice(0, typed.length - 1)), timeout)
-    } else if (deleting && typed === '') {
-      timer = setTimeout(() => { setDeleting(false); setIdx(i => (i + 1) % PHRASES.length) }, 300)
-    }
-    return () => { if (timer) clearTimeout(timer) }
-  }, [typed, deleting, idx, PHRASES])
+    const handleScroll = () => setOffset(window.scrollY)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <div className="relative group rounded-3xl overflow-hidden ring-1 ring-white/30 shadow-lg hover:shadow-xl h-[500px] transition-transform duration-700">
-      <img
-        src={image}
-        alt="Hero"
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-[1.03]"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/1280x520/0B4C72/FFFFFF?text=Riphah' }}
-      />
-      <div className="absolute inset-0 bg-pan opacity-70 mix-blend-multiply" />
-      <div className="absolute inset-0 grid place-items-center px-8 text-center text-white">
-        <div>
+    <div className="relative w-screen left-[50%] right-[50%] -ml-[50vw] h-[600px] overflow-hidden -mt-8 mb-[-80px]">
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center"
+        style={{ 
+          // To use your own image:
+          // 1. Save your image as 'riphah-monument.jpg' in the 'public' folder
+          // 2. Change the line below to: backgroundImage: 'url(/riphah-monument.jpg)',
+          backgroundImage: 'url(/hero.jpg)',
+          transform: `translateY(${offset * 0.5}px)`
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
+      
+      <div className="relative h-full flex items-center justify-center px-4 text-center text-white">
+        <div className="max-w-4xl">
           <Reveal>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight transition-transform duration-700 ease-out group-hover:scale-[1.03] group-hover:-translate-y-[2px]">
-              {typed}
-              <span className="inline-block align-middle w-[2px] h-[1em] bg-white blink-caret ml-1" />
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+              A New Day At Riphah Meeting<br />
+              the Moment, Together
             </h1>
           </Reveal>
+          
           <Reveal delay={100}>
-            <p className="mx-auto mt-4 max-w-3xl text-white/80">A premium alumni experience for careers, mentorship, and events—powered by a modern university brand.</p>
+            <p className="mx-auto mt-6 max-w-3xl text-lg text-white/90 font-light leading-relaxed">
+              Embark on a timeless voyage where cherished memories, lifelong friendships, and boundless opportunities converge. Welcome to our vibrant University Alumni Network, where the past meets the present, and the future unfolds before your eyes.
+            </p>
           </Reveal>
+
           <Reveal delay={200}>
-            <div className="mt-12 md:mt-14 flex items-center justify-center gap-3">
-              <Button variant="brand" onClick={() => onNavigate('contact')}>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button 
+                onClick={() => onNavigate('contact')}
+                className="group relative flex items-center gap-2 rounded-lg bg-[#0B4C72] px-8 py-3 text-sm font-semibold text-white transition-all hover:bg-[#093c5a] hover:shadow-lg hover:shadow-blue-900/20"
+              >
                 About Us
-                <span className="ml-2 text-slate-900">→</span>
-              </Button>
-              <Button variant="outlineWhite" onClick={() => onNavigate('events')}>
+                <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+              
+              <button 
+                onClick={() => onNavigate('events')}
+                className="group relative flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-8 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              >
                 All Events
-                <span className="ml-2 text-white">→</span>
-              </Button>
+                <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
             </div>
           </Reveal>
         </div>
       </div>
+      
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#F0F6FF] to-transparent" />
     </div>
   )
 }

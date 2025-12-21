@@ -64,23 +64,25 @@ export default function Mentorship() {
           </div>
           <ul className="mt-4 grid gap-4 sm:grid-cols-2">
             {filtered.map(m => (
-              <li key={m.id} className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 grid place-items-center text-white text-sm font-semibold">
+              <li key={m.id} className="rounded-xl bg-white ring-1 ring-slate-200 p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="flex items-start gap-4">
+                  <div className="h-14 w-14 shrink-0 rounded-full bg-[#1669bb] text-white grid place-items-center text-lg font-bold shadow-sm ring-4 ring-slate-50">
                     {m.name.split(' ').map(n=>n[0]).join('').slice(0,2)}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{m.name}</div>
-                    <div className="text-sm text-slate-600">{m.title} • {m.company}</div>
-                    <div className="text-xs text-slate-500">{m.city}</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-lg text-slate-900 truncate">{m.name}</div>
+                    <div className="text-sm font-medium text-[#1669bb] truncate">{m.title}</div>
+                    <div className="text-sm text-slate-500 truncate">{m.company} • {m.city}</div>
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {[m.type, ...m.skills].slice(0,4).map((t,i)=> (
-                        <span key={i} className="rounded-full bg-white px-2 py-1 text-xs ring-1 ring-slate-200 text-slate-700 shadow-sm">{t}</span>
+                        <span key={i} className="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+                          {t}
+                        </span>
                       ))}
                     </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Button variant="outline" onClick={() => { setMsgTarget(m); setMsgOpen(true) }}>Message</Button>
-                      <Button variant="primary" onClick={() => { setTarget(m); setRequestOpen(true) }}>Request Mentor</Button>
+                    <div className="mt-4 flex items-center gap-2">
+                      <Button variant="outline" className="flex-1" onClick={() => { setMsgTarget(m); setMsgOpen(true) }}>Message</Button>
+                      <Button variant="brand" className="flex-1 shadow-md" onClick={() => { setTarget(m); setRequestOpen(true) }}>Request Mentor</Button>
                     </div>
                   </div>
                 </div>

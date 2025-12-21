@@ -1,6 +1,6 @@
 const API_BASE = ((import.meta as any).env?.VITE_API_URL ?? '/api')
 
-export async function postLogin(email: string, password: string): Promise<{ token: string; user: { id: string | number; email: string; name: string; role: 'student' | 'admin' } }> {
+export async function postLogin(email: string, password: string): Promise<{ token: string; user: { id: string | number; email: string; name: string; role: 'student' | 'admin' | 'alumni' } }> {
   const res = await fetch(`${API_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -48,6 +48,25 @@ export async function getAlumni() {
 export async function getServices() {
   const res = await fetch(`${API_BASE}/services`)
   if (!res.ok) throw new Error('Failed to load services')
+  return res.json()
+}
+
+export async function getProfile(email: string) {
+  const res = await fetch(`${API_BASE}/profile?email=${encodeURIComponent(email)}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || `Failed to load profile (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function updateProfile(profile: any) {
+  const res = await fetch(`${API_BASE}/profile`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profile)
+  })
+  if (!res.ok) throw new Error('Failed to update profile')
   return res.json()
 }
 

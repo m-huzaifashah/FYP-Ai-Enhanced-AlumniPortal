@@ -31,7 +31,7 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
         <input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm" placeholder="Name" />
         <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm" placeholder="Email" />
         <textarea value={message} onChange={e=>setMessage(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm" placeholder="Message" rows={4} />
-        <button onClick={send} disabled={!canSend} className={(canSend ? '' : 'opacity-60 cursor-not-allowed') + ' w-full rounded-md bg-[#0B4C72] px-4 py-2 text-sm font-medium'}>{loading ? 'Sending…' : 'Send'}</button>
+        <button onClick={send} disabled={!canSend} className={(canSend ? '' : 'opacity-60 cursor-not-allowed') + ' w-full rounded-md bg-[#1669bb] px-4 py-2 text-sm font-medium hover:bg-[#125a9e] transition-colors'}>{loading ? 'Sending…' : 'Send'}</button>
       </div>
     </Modal>
   )
