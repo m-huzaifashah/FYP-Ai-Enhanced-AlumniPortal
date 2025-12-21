@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { postLogin } from '../../api'
 import { Modal } from '../../ui'
 
-export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, loginPassword, setLoginPassword, loginError, setLoginError, onGoForgot, onGoSignup, onLoggedIn }: { open: boolean; onClose: () => void; loginEmail: string; setLoginEmail: (v: string) => void; loginPassword: string; setLoginPassword: (v: string) => void; loginError: string; setLoginError: (v: string) => void; onGoForgot: () => void; onGoSignup: () => void; onLoggedIn?: () => void }) {
+export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, loginPassword, setLoginPassword, loginRole, setLoginRole, loginError, setLoginError, onGoForgot, onGoSignup, onLoggedIn }: { open: boolean; onClose: () => void; loginEmail: string; setLoginEmail: (v: string) => void; loginPassword: string; setLoginPassword: (v: string) => void; loginRole: 'student' | 'admin' | 'alumni'; setLoginRole: (v: 'student' | 'admin' | 'alumni') => void; loginError: string; setLoginError: (v: string) => void; onGoForgot: () => void; onGoSignup: () => void; onLoggedIn?: () => void }) {
   const [loading, setLoading] = useState(false)
   const [show, setShow] = useState(false)
   const email = loginEmail.trim()
@@ -18,8 +18,12 @@ export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, l
     setLoading(true)
     try {
       const { token, user } = await postLogin(email, pass)
+      if (user.role !== loginRole) {
+        throw new Error(`This account is not a ${loginRole} account.`)
+      }
       try { localStorage.setItem('token', token) } catch {}
       try { localStorage.setItem('role', user.role) } catch {}
+      try { localStorage.setItem('email', user.email) } catch {}
       onLoggedIn && onLoggedIn()
       onClose()
     } catch (e: any) {
@@ -33,6 +37,24 @@ export default function LoginModal({ open, onClose, loginEmail, setLoginEmail, l
     <Modal open={open} onClose={() => { if (!loading) onClose() }} title="Login" titleClassName="text-white">
       <div className="space-y-2 sm:space-y-3">
         {loginError && <div className="rounded-md bg-red-900/40 text-red-200 text-sm px-3 py-2">{loginError}</div>}
+        
+        <div className="flex gap-2 justify-center pb-4">
+          {(['student', 'alumni', 'admin'] as const).map(r => (
+             <button
+               key={r}
+               type="button"
+               onClick={() => setLoginRole(r)}
+               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                 loginRole === r 
+                   ? 'bg-[#D29B2A] text-slate-900 shadow-lg scale-105' 
+                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+               }`}
+             >
+               <span className="capitalize">{r}</span>
+             </button>
+          ))}
+        </div>
+
         <input
           value={loginEmail}
           onChange={e => setLoginEmail(e.target.value)}

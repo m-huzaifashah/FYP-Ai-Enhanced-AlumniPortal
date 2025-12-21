@@ -30,6 +30,9 @@ export default function App() {
   const [suEmail, setSuEmail] = useState('')
   const [suPassword, setSuPassword] = useState('')
   const [suConfirm, setSuConfirm] = useState('')
+  const [suRole, setSuRole] = useState<'student' | 'admin' | 'alumni'>('student')
+  const [suSecret, setSuSecret] = useState('')
+  const [loginRole, setLoginRole] = useState<'student' | 'admin' | 'alumni'>('student')
   const [suError, setSuError] = useState('')
   const [suSuccess, setSuSuccess] = useState('')
   const [svcQuery, setSvcQuery] = useState('')
@@ -101,11 +104,16 @@ export default function App() {
         setLoginEmail={setLoginEmail}
         loginPassword={loginPassword}
         setLoginPassword={setLoginPassword}
+        loginRole={loginRole}
+        setLoginRole={setLoginRole}
         loginError={loginError}
         setLoginError={setLoginError}
         onGoForgot={() => { setLoginOpen(false); setRoute('forgot') }}
         onGoSignup={() => { setLoginOpen(false); setRoute('signup') }}
-        onLoggedIn={() => setAuthed(true)}
+        onLoggedIn={() => {
+          setAuthed(true)
+          if (loginRole === 'admin') setRoute('admin')
+        }}
       />
 
       <SignupModal
@@ -119,6 +127,10 @@ export default function App() {
         setSuPassword={setSuPassword}
         suConfirm={suConfirm}
         setSuConfirm={setSuConfirm}
+        suRole={suRole}
+        setSuRole={setSuRole}
+        suSecret={suSecret}
+        setSuSecret={setSuSecret}
         suError={suError}
         suSuccess={suSuccess}
         setSuError={setSuError}

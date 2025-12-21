@@ -15,6 +15,8 @@ import Forgot from '../pages/Forgot'
 
 import type { Service, Event as Ev, Job, Alumni } from '../hooks/useInitialData'
 
+import Profile from '../pages/Profile'
+
 export default function AppRoutes({
   isAdmin,
   alumni,
@@ -124,31 +126,7 @@ export default function AppRoutes({
       <Route path="/forgot" element={<Forgot onBack={() => setRoute('signup')} />} />
       <Route
         path="/profile"
-        element={
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl bg-white/70 ring-1 ring-slate-200 p-6 shadow-sm backdrop-blur-sm">
-              <div className="text-xl font-semibold">Profile</div>
-              <div className="mt-4 space-y-3">
-                <input className="w-full rounded-full bg-white px-4 py-2 text-sm ring-1 ring-slate-200" placeholder="Full Name" />
-                <input className="w-full rounded-full bg-white px-4 py-2 text-sm ring-1 ring-slate-200" placeholder="Email" />
-                <input className="w-full rounded-full bg-white px-4 py-2 text-sm ring-1 ring-slate-200" placeholder="Department" />
-                <input className="w-full rounded-full bg-white px-4 py-2 text-sm ring-1 ring-slate-200" placeholder="Company" />
-                <div className="flex items-center gap-2">
-                  <button className="rounded-full bg-white ring-1 ring-slate-200 px-4 py-2 text-sm">Back</button>
-                  <button className="rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white px-4 py-2 text-sm font-semibold">Save</button>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-2xl bg-white/70 ring-1 ring-slate-200 p-6 shadow-sm backdrop-blur-sm">
-              <div className="text-xl font-semibold">Public Card Preview</div>
-              <div className="mt-4 rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-sm">
-                <div className="font-semibold">Your Name</div>
-                <div className="text-sm text-slate-600">Role at Company</div>
-                <div className="text-xs text-slate-500">Location</div>
-              </div>
-            </div>
-          </div>
-        }
+        element={<Profile />}
       />
       <Route
         path="/settings"
