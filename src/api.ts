@@ -1,4 +1,10 @@
-const API_BASE = ((import.meta as any).env?.VITE_API_URL ?? '/api')
+const API_BASE = ((import.meta as any).env?.VITE_API_URL)
+
+const ML_API =  ((import.meta as any).env?.VITE_ML_API_URL )
+
+if (!ML_API) throw new Error('ML_API is not defined')
+
+  if (!API_BASE) throw new Error('API_BASE is not defined')
 
 export async function postLogin(email: string, password: string): Promise<{ token: string; user: { id: string | number; email: string; name: string; role: 'student' | 'admin' | 'alumni' } }> {
   const res = await fetch(`${API_BASE}/login`, {
@@ -10,7 +16,7 @@ export async function postLogin(email: string, password: string): Promise<{ toke
   return res.json()
 }
 
-export async function postSignup(payload: { name: string; email: string; password: string; role?: 'student' | 'admin'; secret?: string }): Promise<{ id: string | number; email: string; name: string; role: 'student' | 'admin' }> {
+export async function postSignup(payload: { name: string; email: string; password: string; role?: 'student' | 'admin' | 'alumni'; secret?: string }): Promise<{ id: string | number; email: string; name: string; role: 'student' | 'admin' | 'alumni' }> {
   const res = await fetch(`${API_BASE}/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -144,4 +150,37 @@ export async function deleteJob(id: string | number) {
   if (!res.ok) throw new Error((data as any).error || 'Failed to delete job')
   return data
 }
+// ===============================
+// Skill Gap Analysis (ML)
+// ===============================
+
+export async function analyzeSkillGap(payload: {
+  student_skills: string[]
+  job_skills: string[]
+}): Promise<{
+  matched_skills: string[]
+  missing_skills: string[]
+  raw_coverage_percent: number
+  ml_match_percentage: number
+}> {
+  if (!ML_API) {
+    throw new Error('ML API URL not configured')
+  }
+  const res = await fetch(`${ML_API}/skill-gap/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+
+  const data = await res.json().catch(() => ({ error: 'Skill gap analysis failed' }))
+  if (!res.ok) throw new Error((data as any).error || 'Skill gap analysis failed')
+
+  return data
+}
+export async function getSkillVocabulary() {
+  const res = await fetch(`${API_BASE}/skills`)
+  if (!res.ok) throw new Error('Failed to fetch skills')
+  return res.json()
+}
+
 

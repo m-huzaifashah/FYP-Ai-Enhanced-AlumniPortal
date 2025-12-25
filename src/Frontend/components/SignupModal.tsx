@@ -10,11 +10,11 @@ export default function SignupModal({ open, onClose, suName, setSuName, suEmail,
     const passOk = suPassword.length >= 6 && suPassword === suConfirm
     const nameOk = suName.trim().length >= 2
     if (!nameOk || !emailOk || !passOk) { setSuError('Fill all fields correctly'); setSuSuccess(''); return }
-    if (suRole === 'admin' && !suSecret) { setSuError('Admin secret required'); return }
+    // if (suRole === 'admin' && !suSecret) { setSuError('Admin secret required'); return }
     setSuError('')
     setLoading(true)
     try {
-      await postSignup({ name: suName, email: suEmail, password: suPassword, role: suRole === 'alumni' ? undefined : suRole, secret: suSecret })
+      await postSignup({ name: suName, email: suEmail, password: suPassword, role: suRole, secret: suSecret })
       try { localStorage.setItem('email', suEmail) } catch {}
       setSuSuccess('Account created. You can sign in now.')
     } catch (e: any) {
@@ -31,7 +31,7 @@ export default function SignupModal({ open, onClose, suName, setSuName, suEmail,
         {suSuccess && <div className="rounded-md bg-green-900/30 text-green-200 text-sm px-3 py-2">{suSuccess}</div>}
         
         <div className="flex gap-2 justify-center pb-4">
-          {(['student', 'alumni', 'admin'] as const).map(r => (
+          {(['student', 'alumni'] as const).map(r => (
              <button
                key={r}
                type="button"
@@ -52,9 +52,6 @@ export default function SignupModal({ open, onClose, suName, setSuName, suEmail,
         <input value={suPassword} onChange={e=>setSuPassword(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white" placeholder="Password" type="password" />
         <input value={suConfirm} onChange={e=>setSuConfirm(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white" placeholder="Confirm Password" type="password" />
         
-        {suRole === 'admin' && (
-           <input value={suSecret} onChange={e=>setSuSecret(e.target.value)} className="w-full rounded-md border border-red-900 bg-slate-900 px-3 py-2 text-sm text-white" placeholder="Admin Secret Key" type="password" />
-        )}
 
         <button onClick={submit} disabled={loading} className="w-full rounded-md bg-[#0B4C72] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
           {loading ? 'Creating...' : 'Create Account'}

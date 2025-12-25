@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Reveal } from '../../ui'
 import Hero from '../components/Hero'
 import JoinCards from '../components/JoinCards'
@@ -8,6 +9,15 @@ import Stats from '../components/Stats'
 type Featured = { id: number; name: string; role: string; company: string }
 
 export default function Dashboard({ onNavigate, featured }: { onNavigate: (route: 'contact' | 'events' | 'directory') => void; featured: Featured[] }) {
+  const location = useLocation()
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace('#', '')
+      const el = document.getElementById(id)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [location])
+
   const RIU_LOGO = 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png'
   const TESTIMONIALS = useMemo(() => ([
     { quote: 'The alumni network opened doors I didn’t know existed.', author: 'Aisha Khan', role: 'Software Engineer, TechNest' },

@@ -57,6 +57,7 @@ export default function Profile() {
   }
 
   const isAlumni = profile.role === 'alumni'
+  const isStudent = profile.role === 'student'
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -81,6 +82,40 @@ export default function Profile() {
             />
           </div>
           
+          {isStudent && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 ml-1">Intake Batch</label>
+                  <input 
+                    className="w-full rounded-full bg-white px-4 py-2 text-sm ring-1 ring-slate-200 focus:ring-blue-500 outline-none" 
+                    placeholder="Spring 2024" 
+                    value={profile.batch || ''} 
+                    onChange={e => setProfile({...profile, batch: e.target.value})} 
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 ml-1">Semester</label>
+                  <input 
+                    className="w-full rounded-full bg-white px-4 py-2 text-sm ring-1 ring-slate-200 focus:ring-blue-500 outline-none" 
+                    placeholder="1st" 
+                    value={profile.semester || ''} 
+                    onChange={e => setProfile({...profile, semester: e.target.value})} 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 ml-1">Department</label>
+                <input 
+                  className="w-full rounded-full bg-white px-4 py-2 text-sm ring-1 ring-slate-200 focus:ring-blue-500 outline-none" 
+                  placeholder="Computer Science" 
+                  value={profile.department || ''} 
+                  onChange={e => setProfile({...profile, department: e.target.value})} 
+                />
+              </div>
+            </>
+          )}
+
           {isAlumni && (
             <>
               <div className="grid grid-cols-2 gap-3">
@@ -155,7 +190,12 @@ export default function Profile() {
         <div className="text-xl font-semibold">Public Card Preview</div>
         <div className="mt-4 rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-sm">
           <div className="font-semibold text-lg">{profile.name || 'Your Name'}</div>
-          {isAlumni ? (
+          {isStudent ? (
+             <>
+                <div className="text-sm text-slate-600">{profile.department || 'Department'}</div>
+                <div className="text-xs text-slate-500 mt-1">{profile.batch ? `Batch: ${profile.batch}` : 'Intake Batch'} • {profile.semester ? `${profile.semester} Semester` : 'Semester'}</div>
+             </>
+          ) : isAlumni ? (
              <>
                 <div className="text-sm text-slate-600">{profile.jobTitle || 'Alumni Member'} at {profile.company || 'Company'}</div>
                 <div className="text-xs text-slate-500 mt-1">{profile.location || 'Location'}</div>
