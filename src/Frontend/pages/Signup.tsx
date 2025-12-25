@@ -19,7 +19,7 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
     if (!nameOk || !emailOk || !passOk) { setError('Fill all fields correctly'); setSuccess(''); return }
     setError('')
     try {
-      const payload: any = { name: name.trim(), email: email.trim(), password, secret }
+      const payload: any = { name: name.trim(), email: email.trim(), password, secret, role }
       const data = await postSignup(payload)
       try {
         const { token, user } = await postLogin(email.trim(), password)

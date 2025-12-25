@@ -104,17 +104,17 @@ export default function AppRoutes({
       <Route
         path="/career"
         element={
-          <CareerSupport
-            jobs={jobs}
-            internships={[
-              { id: 101, title: 'Software Intern', company: 'TechNest', location: 'Karachi' },
-              { id: 102, title: 'Data Intern', company: 'MarketIQ', location: 'Remote' },
-              { id: 103, title: 'Design Intern', company: 'AutoForm', location: 'Islamabad' },
-              { id: 104, title: 'Marketing Intern', company: 'GridWorks', location: 'Lahore' },
-              { id: 105, title: 'QA Intern', company: 'TechNest', location: 'Karachi' },
-              { id: 106, title: 'Cloud Intern', company: 'MarketIQ', location: 'Remote' },
-            ]}
-          />
+          <CareerSupport/>
+            // jobs={jobs}
+            // internships={[
+            //   { id: 101, title: 'Software Intern', company: 'TechNest', location: 'Karachi' },
+            //   { id: 102, title: 'Data Intern', company: 'MarketIQ', location: 'Remote' },
+            //   { id: 103, title: 'Design Intern', company: 'AutoForm', location: 'Islamabad' },
+            //   { id: 104, title: 'Marketing Intern', company: 'GridWorks', location: 'Lahore' },
+            //   { id: 105, title: 'QA Intern', company: 'TechNest', location: 'Karachi' },
+            //   { id: 106, title: 'Cloud Intern', company: 'MarketIQ', location: 'Remote' },
+            // ]}
+          
         }
       />
       <Route path="/mentorship" element={<Mentorship />} />

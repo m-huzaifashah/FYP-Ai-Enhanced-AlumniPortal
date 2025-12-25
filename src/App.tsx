@@ -67,7 +67,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800 overflow-x-hidden">
-      <Navbar route={currentRoute as any} onNavigate={setRoute as any} onOpenLogin={() => setLoginOpen(true)} nav={NAV_ITEMS as any} authed={authed} isAdmin={isAdmin} onSignOut={() => { signOut(() => setAuthed(false)) }} />
+      <Navbar />
 
       <div className="mx-auto max-w-7xl">
         <main className="px-4 py-8">

@@ -4,6 +4,12 @@ import morgan from 'morgan'
 import dotenv from 'dotenv'
 import { MongoClient, ObjectId } from 'mongodb'
 import crypto from 'crypto'
+import fs from 'fs'
+import path from 'path'
+import csv from 'csv-parser'
+import { fileURLToPath } from 'url'
+import { loadJobs } from '../backend-core/utils/loadjobs.js'
+
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
 import { EVENTS } from '../src/Frontend/data/events.js'
@@ -11,6 +17,9 @@ import { JOBS } from '../src/Frontend/data/jobs.js'
 import { MENTORS } from '../src/Frontend/data/mentors.js'
 import { ALUMNI } from '../src/Frontend/data/alumni.js'
 import { SERVICES } from '../src/Frontend/data/services.js'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 
 const app = express()
 dotenv.config()
@@ -34,6 +43,42 @@ async function initDb() {
     client = new MongoClient(uri)
     try {
       await client.connect()
+      async function loadJobsFromCSV() {
+  return new Promise((resolve, reject) => {
+    const jobs = []
+    const skillSet = new Set()
+
+    const csvPath = path.join(__dirname, 'data/clean_postings2.csv')
+
+    fs.createReadStream(csvPath)
+      .pipe(csv())
+      .on('data', (row) => {
+        if (!row.job_title || !row.job_skills) return
+
+        const skills = row.job_skills
+          .toLowerCase()
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+
+        skills.forEach(s => skillSet.add(s))
+
+        jobs.push({
+          id: jobs.length + 1,
+          title: row.job_title,
+          skills
+        })
+      })
+      .on('end', () => {
+        resolve({
+          jobs,
+          skillVocabulary: Array.from(skillSet)
+        })
+      })
+      .on('error', reject)
+  })
+}
+
     } catch (e) {
       console.error('Initial MongoDB connection failed', e?.message || e)
       await new Promise(r => setTimeout(r, 1000))
@@ -93,12 +138,27 @@ async function initDb() {
     await ensureCollection('jobs', validators.jobs)
     await ensureCollection('mentors', validators.mentors)
     await ensureCollection('alumni', validators.alumni)
+    await ensureCollection('students', {
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['email', 'name'],
+          properties: {
+            email: { bsonType: 'string', description: 'must be a string and is required' },
+            name: { bsonType: 'string', description: 'must be a string and is required' },
+            batch: { bsonType: 'string', description: 'must be a string' },
+            department: { bsonType: 'string', description: 'must be a string' },
+            semester: { bsonType: 'string', description: 'must be a string' }
+          }
+        }
+      }
+    })
     await ensureCollection('services', validators.services)
-    await ensureCollection('users', validators.users)
+    await ensureCollection('users_v2', validators.users)
     try {
-      await db.collection('users').createIndex({ email: 1 }, { unique: true })
+      await db.collection('users_v2').createIndex({ email: 1 }, { unique: true })
     } catch (e) {
-      console.warn('Unique index on users.email failed or exists', e?.codeName || e?.message || e)
+      console.warn('Unique index on users_v2.email failed or exists', e?.codeName || e?.message || e)
     }
     try {
       const seedIfEmpty = async (name, docs) => {
@@ -118,15 +178,15 @@ async function initDb() {
       const adminPass = process.env.ADMIN_PASSWORD
       const adminName = process.env.ADMIN_NAME || 'Portal Admin'
       if (adminEmail && adminPass) {
-        const exists = await db.collection('users').findOne({ email: adminEmail })
+        const exists = await db.collection('users_v2').findOne({ email: adminEmail })
         if (!exists) {
           const salt = makeSalt()
           try {
-            await db.collection('users').insertOne({ email: adminEmail, name: adminName, role: 'admin', salt, passwordHash: hashPassword(salt + adminPass) })
+            await db.collection('users_v2').insertOne({ email: adminEmail, name: adminName, role: 'admin', salt, passwordHash: hashPassword(salt + adminPass) })
             console.log(`Seeded admin user '${adminEmail}'`)
           } catch (e) {
             if (e?.code === 121 || String(e?.codeName || '').includes('DocumentValidationFailure') || String(e?.message || '').includes('Document failed validation')) {
-              await db.collection('users').insertOne({ email: adminEmail, name: adminName, role: 'admin', passwordHash: hashPassword(adminPass) })
+              await db.collection('users_v2').insertOne({ email: adminEmail, name: adminName, role: 'admin', passwordHash: hashPassword(adminPass) })
               console.log(`Seeded admin user '${adminEmail}' (no salt fallback)`)
             } else {
               throw e
@@ -149,7 +209,10 @@ app.use(morgan('tiny'))
 
 let users = []
 let eventsLocal = [...EVENTS]
-let jobsLocal = [...JOBS]
+// let jobsLocal = [...JOBS]
+let jobsLocal = []
+let skillVocabulary = []
+
 
 function mapDocs(items) {
   return (items || []).map(it => {
@@ -192,18 +255,18 @@ app.post('/api/login', async (req, res) => {
   try {
     if (db) {
       try {
-        let user = await db.collection('users').findOne({ email })
+        let user = await db.collection('users_v2').findOne({ email })
         if (!user && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && email === process.env.ADMIN_EMAIL) {
           const salt = makeSalt()
           try {
             const doc = { email: process.env.ADMIN_EMAIL, name: process.env.ADMIN_NAME || 'Portal Admin', role: 'admin', salt, passwordHash: hashPassword(salt + process.env.ADMIN_PASSWORD) }
-            const r = await db.collection('users').insertOne(doc)
+            const r = await db.collection('users_v2').insertOne(doc)
             user = { ...doc, _id: r.insertedId }
             console.log(`Created admin user '${email}' on login`)
           } catch (e) {
             if (e?.code === 121 || String(e?.codeName || '').includes('DocumentValidationFailure') || String(e?.message || '').includes('Document failed validation')) {
               const doc = { email: process.env.ADMIN_EMAIL, name: process.env.ADMIN_NAME || 'Portal Admin', role: 'admin', passwordHash: hashPassword(process.env.ADMIN_PASSWORD) }
-              const r = await db.collection('users').insertOne(doc)
+              const r = await db.collection('users_v2').insertOne(doc)
               user = { ...doc, _id: r.insertedId }
               console.log(`Created admin user '${email}' on login (no salt fallback)`)
             } else {
@@ -247,18 +310,18 @@ app.post('/api/signup', async (req, res) => {
   try {
     if (!db) return res.status(503).json({ error: 'Database not available' })
     try {
-      const existing = await db.collection('users').findOne({ email })
+      const existing = await db.collection('users_v2').findOne({ email })
       if (existing) return res.status(409).json({ error: 'Email already registered' })
       const salt = makeSalt()
       try {
         const doc = { email, name, role: roleVal, salt, passwordHash: hashPassword(salt + password) }
         // Force bypass validation since we cannot update the schema
-        const r = await db.collection('users').insertOne(doc)
+        const r = await db.collection('users_v2').insertOne(doc)
         return res.json({ id: String(r.insertedId), email, name, role: roleVal })
       } catch (e) {
         if (e?.code === 121 || String(e?.codeName || '').includes('DocumentValidationFailure') || String(e?.message || '').includes('Document failed validation')) {
           const doc = { email, name, role: roleVal, passwordHash: hashPassword(password) }
-          const r = await db.collection('users').insertOne(doc)
+          const r = await db.collection('users_v2').insertOne(doc)
           return res.json({ id: String(r.insertedId), email, name, role: roleVal })
         }
         throw e
@@ -281,13 +344,18 @@ app.get('/api/profile', async (req, res) => {
   if (!email || typeof email !== 'string') return res.status(400).json({ error: 'Email required' })
   try {
     if (!db) return res.status(503).json({ error: 'Database not available' })
-    const user = await db.collection('users').findOne({ email })
+    const user = await db.collection('users_v2').findOne({ email })
     if (!user) return res.status(404).json({ error: 'User not found' })
     let profile = { id: String(user._id), email: user.email, name: user.name, role: user.role }
     if (user.role === 'alumni') {
       const alumniDoc = await db.collection('alumni').findOne({ email })
       if (alumniDoc) {
         profile = { ...profile, ...alumniDoc, id: String(alumniDoc._id || user._id) }
+      }
+    } else if (user.role === 'student') {
+      const studentDoc = await db.collection('students').findOne({ email })
+      if (studentDoc) {
+        profile = { ...profile, ...studentDoc, id: String(studentDoc._id || user._id) }
       }
     }
     res.json(profile)
@@ -301,11 +369,11 @@ app.put('/api/profile', async (req, res) => {
   if (!email || typeof email !== 'string') return res.status(400).json({ error: 'Email required' })
   try {
     if (!db) return res.status(503).json({ error: 'Database not available' })
-    const user = await db.collection('users').findOne({ email })
+    const user = await db.collection('users_v2').findOne({ email })
     if (!user) return res.status(404).json({ error: 'User not found' })
     
     // Update basic user info
-    if (name) await db.collection('users').updateOne({ email }, { $set: { name } })
+    if (name) await db.collection('users_v2').updateOne({ email }, { $set: { name } })
     
     // Update extended profile if alumni
     if (user.role === 'alumni') {
@@ -324,6 +392,20 @@ app.put('/api/profile', async (req, res) => {
         { $set: alumniUpdate }, 
         { upsert: true }
       )
+    } else if (user.role === 'student') {
+      const { batch, department, semester } = rest
+      const studentUpdate = {
+        name: name || user.name,
+        email,
+        ...(batch ? { batch: String(batch) } : {}),
+        ...(department ? { department } : {}),
+        ...(semester ? { semester } : {}),
+      }
+      await db.collection('students').updateOne(
+        { email },
+        { $set: studentUpdate },
+        { upsert: true }
+      )
     }
     res.json({ success: true })
   } catch (e) {
@@ -335,7 +417,7 @@ app.put('/api/profile', async (req, res) => {
 app.get('/api/users', async (req, res) => {
   try {
     if (!db) return res.status(503).json({ error: 'Database not available' })
-    const items = await db.collection('users').find({}).project({ email: 1, name: 1, role: 1 }).toArray()
+    const items = await db.collection('users_v2').find({}).project({ email: 1, name: 1, role: 1 }).toArray()
     const dbUsers = items.map(it => ({ id: String(it._id), email: it.email, name: it.name, role: it.role }))
     res.json(dbUsers)
   } catch (e) {
@@ -346,8 +428,8 @@ app.get('/api/users', async (req, res) => {
 app.get('/api/debug/users-validator', async (req, res) => {
   try {
     if (!db) return res.status(503).json({ error: 'Database not available' })
-    const opts = await db.collection('users').options()
-    const stats = await db.command({ collStats: 'users' }).catch(() => ({}))
+    const opts = await db.collection('users_v2').options()
+    const stats = await db.command({ collStats: 'users_v2' }).catch(() => ({}))
     res.json({ options: opts || {}, stats })
   } catch (e) {
     res.status(500).json({ error: e?.message || 'Failed to get validator' })
@@ -498,6 +580,10 @@ app.get('/api/services', async (req, res) => {
     res.json(SERVICES)
   }
 })
+app.get('/api/skills', (req, res) => {
+  res.json(skillVocabulary)
+})
+
 
 app.post('/api/contact', (req, res) => {
   const { name, email, message } = req.body || {}
@@ -505,6 +591,18 @@ app.post('/api/contact', (req, res) => {
   if (!ok) return res.status(400).json({ error: 'Invalid message' })
   res.json({ status: 'received' })
 })
+
+loadJobs()
+  .then(data => {
+    jobsLocal = data.jobs
+    skillVocabulary = data.skillVocabulary
+    console.log(`Loaded ${jobsLocal.length} jobs`)
+    console.log(`Loaded ${skillVocabulary.length} skills`)
+  })
+  .catch(err => {
+    console.error('Failed to load jobs dataset:', err)
+  })
+
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`)
