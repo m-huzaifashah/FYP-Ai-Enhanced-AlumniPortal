@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react'
-import { Button, Input, Card } from '../../ui'
+import { Button, Input, Card, Modal } from '../../ui'
 
-type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string }
+type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string; email?: string }
 
 export default function Directory({ alumni, query, onQueryChange }: { alumni: Alumni[]; query: string; onQueryChange: (v: string) => void }) {
   const [dept, setDept] = useState('All')
   const [batch, setBatch] = useState('All')
   const [skill, setSkill] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedProfile, setSelectedProfile] = useState<Alumni | null>(null)
   const pageSize = 12
 
   const departments = useMemo(() => ['All', ...Array.from(new Set(alumni.map(a => a.department)))], [alumni])
@@ -60,7 +61,7 @@ export default function Directory({ alumni, query, onQueryChange }: { alumni: Al
                       <div className="text-sm font-medium text-[#1669bb] truncate">{a.role}</div>
                       <div className="text-sm text-slate-500 truncate">{a.company}</div>
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0 border-slate-200 text-slate-600 hover:text-[#1669bb] hover:border-[#1669bb]">
+                    <Button variant="outline"  className="shrink-0 border-slate-200 text-slate-600 hover:text-[#1669bb] hover:border-[#1669bb]">
                       Contact
                     </Button>
                   </div>
@@ -86,12 +87,55 @@ export default function Directory({ alumni, query, onQueryChange }: { alumni: Al
                 </div>
               </div>
               <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] transition-all duration-300">
-                <Button variant="primary" className="shadow-xl transform hover:scale-105">View Profile</Button>
+                <Button variant="primary" onClick={() => setSelectedProfile(a)} className="shadow-xl transform hover:scale-105">View Profile</Button>
               </div>
             </Card>
           </li>
         ))}
       </ul>
+
+      <Modal open={!!selectedProfile} onClose={() => setSelectedProfile(null)} title="Alumni Profile">
+        {selectedProfile && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="h-20 w-20 rounded-full bg-[#1669bb] text-white grid place-items-center text-2xl font-bold shadow-md ring-4 ring-slate-50">
+                {selectedProfile.name.split(' ').map(n=>n[0]).join('').slice(0,2)}
+              </div>
+              <div>
+                <div className="text-xl font-bold text-slate-900">{selectedProfile.name}</div>
+                <div className="text-[#1669bb] font-medium">{selectedProfile.role}</div>
+                <div className="text-slate-600">{selectedProfile.company}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Department</div>
+                <div className="font-medium text-slate-900">{selectedProfile.department}</div>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Batch</div>
+                <div className="font-medium text-slate-900">{selectedProfile.batch}</div>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Location</div>
+                <div className="font-medium text-slate-900">{selectedProfile.location}</div>
+              </div>
+              {selectedProfile.email && (
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Email</div>
+                  <div className="font-medium text-slate-900 truncate" title={selectedProfile.email}>{selectedProfile.email}</div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setSelectedProfile(null)}>Close</Button>
+              <Button variant="primary">Connect</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-slate-600">Page {page} of {totalPages}</div>

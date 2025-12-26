@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from '../pages/Dashboard'
 import Services from '../pages/Services'
 import ServiceDetail from '../pages/ServiceDetail'
@@ -19,6 +19,7 @@ import Profile from '../pages/Profile'
 
 export default function AppRoutes({
   isAdmin,
+  role,
   alumni,
   filtered,
   jobs,
@@ -37,8 +38,10 @@ export default function AppRoutes({
   setContactOpen,
   setLoginOpen,
   openService,
+  onProfileUpdate,
 }: {
   isAdmin: boolean
+  role: 'student' | 'admin' | 'alumni' | null
   alumni: Alumni[]
   filtered: Alumni[]
   jobs: Job[]
@@ -57,6 +60,7 @@ export default function AppRoutes({
   setContactOpen: (v: boolean) => void
   setLoginOpen: (v: boolean) => void
   openService: (id: string) => void
+  onProfileUpdate?: () => void
 }) {
   return (
     <Routes>
@@ -100,7 +104,7 @@ export default function AppRoutes({
       />
       <Route path="/directory" element={<Directory alumni={filtered} query={dirQuery} onQueryChange={onDirQueryChange} />} />
       <Route path="/events" element={<Events />} />
-      <Route path="/jobs" element={<Jobs />} />
+      <Route path="/jobs" element={<Jobs role={role} />} />
       <Route
         path="/career"
         element={
@@ -119,7 +123,7 @@ export default function AppRoutes({
       />
       <Route path="/mentorship" element={<Mentorship />} />
       <Route path="/admin" element={
-        <Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} />
+        isAdmin ? <Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} /> : <Navigate to="/" />
       } />
       <Route path="/contact" element={<Contact onOpenMessage={() => setContactOpen(true)} />} />
       <Route path="/login" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
@@ -127,7 +131,7 @@ export default function AppRoutes({
       <Route path="/forgot" element={<Forgot onBack={() => setRoute('signup')} />} />
       <Route
         path="/profile"
-        element={<Profile />}
+        element={<Profile onSave={onProfileUpdate} />}
       />
       <Route
         path="/settings"
