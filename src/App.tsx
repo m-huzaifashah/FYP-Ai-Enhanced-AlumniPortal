@@ -126,6 +126,8 @@ export default function App() {
         onGoSignup={() => { setLoginOpen(false); setRoute('signup') }}
         onLoggedIn={() => {
           setAuthed(true)
+          setLoginEmail('')
+          setLoginPassword('')
           if (loginRole === 'admin') setRoute('admin')
         }}
       />

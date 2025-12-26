@@ -70,9 +70,10 @@ export default function Navbar({ authed, isAdmin, onOpenLogin, onOpenSignup, onL
                 </div>
               ) : (
                 <div className="relative">
+                  {accountOpen && <div className="fixed inset-0 z-40" onClick={() => setAccountOpen(false)} />}
                   <button 
                     onClick={() => setAccountOpen(!accountOpen)} 
-                    className="flex items-center gap-3 bg-white/10 hover:bg-white/20 transition-colors rounded-full pl-1 pr-4 py-1 border border-white/10"
+                    className="relative z-50 flex items-center gap-3 bg-white/10 hover:bg-white/20 transition-colors rounded-full pl-1 pr-4 py-1 border border-white/10"
                   >
                     <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 ring-2 ring-white/20"></div>
                     <span className="text-sm font-medium text-white">Account</span>
@@ -81,10 +82,10 @@ export default function Navbar({ authed, isAdmin, onOpenLogin, onOpenSignup, onL
                   
                   {accountOpen && (
                     <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-white ring-1 ring-black/5 shadow-xl text-slate-800 z-50 py-2">
-                      <Link to="/profile" className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">Profile</Link>
-                      <Link to="/settings" className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">Settings</Link>
+                      <Link to="/profile" onClick={() => setAccountOpen(false)} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">Profile</Link>
+                      <Link to="/settings" onClick={() => setAccountOpen(false)} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">Settings</Link>
                       <div className="h-px bg-slate-100 my-1" />
-                      <button onClick={onLogout} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 text-red-600 transition-colors">Sign Out</button>
+                      <button onClick={() => { setAccountOpen(false); onLogout() }} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 text-red-600 transition-colors">Sign Out</button>
                     </div>
                   )}
                 </div>
