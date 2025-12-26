@@ -52,6 +52,14 @@ export default function App() {
     try { localStorage.setItem('last-route', r) } catch {}
     setRouteState(r)
   }
+
+  const handleLogout = () => {
+    signOut(() => {
+      setAuthed(false)
+      navigate('/')
+    })
+  }
+
   const filtered = useFilterAlumni(query, alumni)
   const servicesFiltered = useFilterServices(svcQuery, svcCategory, services)
 
@@ -67,7 +75,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800">
-      <Navbar />
+      <Navbar 
+        authed={authed}
+        isAdmin={isAdmin}
+        onOpenLogin={() => setLoginOpen(true)} 
+        onOpenSignup={() => setSignupOpen(true)} 
+        onLogout={handleLogout}
+      />
 
       <div className="mx-auto max-w-7xl">
         <main className="px-4 py-8">
