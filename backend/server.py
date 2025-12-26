@@ -76,7 +76,7 @@ TECH_SKILLS = {
   "kafka", "rabbitmq", "activemq",
   "redis pubsub", "nats",
   "pytest", "jest", "mocha", "junit", "selenium",
-  "git", "github", "gitlab", "bitbucket", "postman"
+  "git", "github", "gitlab", "bitbucket", "postman",'postman'
 
 
 }
