@@ -20,6 +20,7 @@ export default function App() {
   const [route, setRouteState] = useState<Route>('dashboard')
   const [query, setQuery] = useState('')
   const [authed, setAuthed] = useState(false)
+  const [role, setRole] = useState<'student' | 'admin' | 'alumni' | null>(null)
   const [loginOpen, setLoginOpen] = useState(false)
   const [signupOpen, setSignupOpen] = useState(false)
   const [contactOpen, setContactOpen] = useState(false)
@@ -38,13 +39,13 @@ export default function App() {
   const [svcQuery, setSvcQuery] = useState('')
   const [svcDetail, setSvcDetail] = useState<Service | null>(null)
   const [svcCategory, setSvcCategory] = useState<'All' | 'Career' | 'Community' | 'Benefits' | 'Support'>('All')
-  const { services, alumni, jobs, events, apiMode, setEvents } = useInitialData()
+  const { services, alumni, jobs, events, apiMode, setEvents, refreshAlumni } = useInitialData()
   const navigate = useNavigate()
   const location = useLocation()
   const currentRoute: Route = PATH_TO_ROUTE[location.pathname] ?? 'dashboard'
   const isAdmin = getIsAdmin(authed)
 
-  React.useEffect(() => { initAuthed(setAuthed) }, [])
+  React.useEffect(() => { initAuthed(setAuthed, setRole) }, [])
 
   const setRoute = (r: Route) => {
     const p = ROUTE_TO_PATH[r]
@@ -56,6 +57,7 @@ export default function App() {
   const handleLogout = () => {
     signOut(() => {
       setAuthed(false)
+      setRole(null)
       navigate('/')
     })
   }
@@ -87,6 +89,7 @@ export default function App() {
         <main className="px-4 py-8">
           <AppRoutes
             isAdmin={isAdmin}
+            role={role}
             alumni={alumni as any}
             filtered={filtered as any}
             jobs={jobs as any}
@@ -105,6 +108,7 @@ export default function App() {
             setContactOpen={setContactOpen}
             setLoginOpen={setLoginOpen}
             openService={openService}
+            onProfileUpdate={refreshAlumni}
           />
         </main>
       </div>
@@ -126,6 +130,7 @@ export default function App() {
         onGoSignup={() => { setLoginOpen(false); setRoute('signup') }}
         onLoggedIn={() => {
           setAuthed(true)
+          setRole(loginRole)
           setLoginEmail('')
           setLoginPassword('')
           if (loginRole === 'admin') setRoute('admin')

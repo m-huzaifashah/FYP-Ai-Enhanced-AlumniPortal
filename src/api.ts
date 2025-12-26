@@ -182,5 +182,20 @@ export async function getSkillVocabulary() {
   if (!res.ok) throw new Error('Failed to fetch skills')
   return res.json()
 }
+// ===============================
+// Job Roles (CORE Backend)
+// ===============================
+
+export async function getRoles(): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/roles`)
+  if (!res.ok) throw new Error('Failed to fetch roles')
+  return res.json()
+}
+
+export async function getJobsByRole(role: string): Promise<{ id: number; title: string }[]> {
+  const res = await fetch(`${API_BASE}/jobs/by-role/${role}`)
+  if (!res.ok) throw new Error('Failed to fetch jobs by role')
+  return res.json()
+}
 
 

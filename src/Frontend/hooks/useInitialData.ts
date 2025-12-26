@@ -2,7 +2,7 @@ import React from 'react'
 import { getServices, getAlumni, getJobs, getEvents, getHealth } from '../../api'
 
 export type Service = { id: string; title: string; description: string; category: 'Career' | 'Community' | 'Benefits' | 'Support' }
-export type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string }
+export type Alumni = { id: number; name: string; batch: number; department: string; location: string; role: string; company: string; email?: string }
 export type Event = { id: number | string; title: string; date: string; location: string; description: string }
 export type Job = { id: number | string; title: string; company: string; location: string; link: string }
 
@@ -47,5 +47,12 @@ export function useInitialData() {
     }
   }, [])
 
-  return { services, alumni, jobs, events, apiMode, setEvents }
+  const refreshAlumni = React.useCallback(async () => {
+    try {
+      const alm = await getAlumni()
+      setAlumni(alm as Alumni[])
+    } catch {}
+  }, [])
+
+  return { services, alumni, jobs, events, apiMode, setEvents, refreshAlumni }
 }

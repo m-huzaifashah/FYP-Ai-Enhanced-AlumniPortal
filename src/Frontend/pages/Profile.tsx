@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { getProfile, updateProfile } from '../../api'
 
-export default function Profile() {
+export default function Profile({ onSave }: { onSave?: () => void }) {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -31,6 +31,7 @@ export default function Profile() {
     try {
       await updateProfile(profile)
       setMsg('Profile updated successfully')
+      if (onSave) onSave()
     } catch (e) {
       setMsg('Failed to update profile')
     } finally {
