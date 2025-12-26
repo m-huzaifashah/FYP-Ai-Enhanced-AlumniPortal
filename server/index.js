@@ -4,10 +4,6 @@ import morgan from 'morgan'
 import dotenv from 'dotenv'
 import { MongoClient, ObjectId } from 'mongodb'
 import crypto from 'crypto'
-import fs from 'fs'
-import path from 'path'
-import csv from 'csv-parser'
-import { fileURLToPath } from 'url'
 import { loadJobs } from '../backend-core/utils/loadjobs.js'
 
 import { MongoMemoryServer } from 'mongodb-memory-server'
@@ -17,8 +13,36 @@ import { JOBS } from '../src/Frontend/data/jobs.js'
 import { MENTORS } from '../src/Frontend/data/mentors.js'
 import { ALUMNI } from '../src/Frontend/data/alumni.js'
 import { SERVICES } from '../src/Frontend/data/services.js'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+
+
+// ===============================
+// JOB ROLE KEYWORDS
+// ===============================
+const ROLE_KEYWORDS = {
+  backend: ["backend", "api", "server", "microservice"],
+  frontend: ["frontend", "ui", "react", "angular", "vue"],
+  fullstack: ["full stack", "fullstack"],
+  data: ["data", "analytics"],
+  ml: ["machine learning", "deep learning", "nlp", "computer vision"],
+  devops: ["devops", "cloud", "aws", "docker", "kubernetes"],
+  mobile: ["android", "ios", "flutter", "react native"],
+  security: ["security", "cyber", "infosec"],
+  qa: ["qa", "testing", "automation", "selenium"],
+  embedded: ["embedded", "iot", "firmware", "arduino"],
+  blockchain: ["blockchain", "web3", "solidity"],
+  enterprise: ["erp", "sap", "oracle"],
+}
+
+function detectRole(title = '') {
+  const t = title.toLowerCase()
+
+  for (const [role, keywords] of Object.entries(ROLE_KEYWORDS)) {
+    if (keywords.some(k => t.includes(k))) {
+      return role
+    }
+  }
+  return 'other'
+}
 
 
 const app = express()
@@ -43,42 +67,6 @@ async function initDb() {
     client = new MongoClient(uri)
     try {
       await client.connect()
-      async function loadJobsFromCSV() {
-  return new Promise((resolve, reject) => {
-    const jobs = []
-    const skillSet = new Set()
-
-    const csvPath = path.join(__dirname, 'data/clean_postings2.csv')
-
-    fs.createReadStream(csvPath)
-      .pipe(csv())
-      .on('data', (row) => {
-        if (!row.job_title || !row.job_skills) return
-
-        const skills = row.job_skills
-          .toLowerCase()
-          .split(',')
-          .map(s => s.trim())
-          .filter(Boolean)
-
-        skills.forEach(s => skillSet.add(s))
-
-        jobs.push({
-          id: jobs.length + 1,
-          title: row.job_title,
-          skills
-        })
-      })
-      .on('end', () => {
-        resolve({
-          jobs,
-          skillVocabulary: Array.from(skillSet)
-        })
-      })
-      .on('error', reject)
-  })
-}
-
     } catch (e) {
       console.error('Initial MongoDB connection failed', e?.message || e)
       await new Promise(r => setTimeout(r, 1000))
@@ -207,9 +195,7 @@ app.use(cors({ origin: true }))
 app.use(express.json())
 app.use(morgan('tiny'))
 
-let users = []
 let eventsLocal = [...EVENTS]
-// let jobsLocal = [...JOBS]
 let jobsLocal = []
 let skillVocabulary = []
 
@@ -495,14 +481,64 @@ app.delete('/api/events/:id', async (req, res) => {
 })
 app.get('/api/jobs', async (req, res) => {
   try {
-    if (!db) return res.json(jobsLocal)
-    const items = await db.collection('jobs').find({}).toArray()
-    const mapped = mapDocs(items)
-    res.json(mapped.length ? mapped : jobsLocal)
+    const { source } = req.query
+    const dbJobs = db ? await db.collection('jobs').find({}).toArray() : []
+    const mappedDbJobs = mapDocs(dbJobs)
+    
+    if (source === 'db') {
+      return res.json(mappedDbJobs)
+    }
+
+    // Merge DB jobs (Admin created) and Dataset jobs (CSV loaded)
+    const allJobs = [...mappedDbJobs, ...jobsLocal]
+    res.json(allJobs)
   } catch (e) {
+    const { source } = req.query
+    if (source === 'db') return res.json([])
     res.json(jobsLocal)
   }
 })
+app.get('/api/jobs/by-role/:role', (req, res) => {
+  const role = req.params.role.toLowerCase()
+  const filtered = jobsLocal.filter(j => j.role === role)
+
+  res.json(
+    filtered.map(j => ({
+      id: j.id,
+      title: j.title
+    }))
+  )
+})
+
+
+app.get('/api/roles', (req, res) => {
+  const roles = [...new Set(jobsLocal.map(j => j.role))]
+  res.json(roles)
+})
+
+
+app.get('/api/jobs/:id', async (req, res) => {
+  const id = req.params.id
+  try {
+    if (db) {
+      try {
+        // Try finding by ObjectId first (DB jobs)
+        const job = await db.collection('jobs').findOne({ _id: new ObjectId(id) })
+        if (job) return res.json({ ...job, id: String(job._id) })
+      } catch (e) {
+        // ID might not be ObjectId (e.g. numeric ID from CSV)
+      }
+    }
+    // Fallback to local CSV jobs
+    const localJob = jobsLocal.find(j => String(j.id) === String(id))
+    if (localJob) return res.json(localJob)
+    
+    return res.status(404).json({ error: 'Job not found' })
+  } catch (e) {
+    res.status(500).json({ error: 'Error fetching job' })
+  }
+})
+
 app.post('/api/jobs', async (req, res) => {
   const { title, company, location, link } = req.body || {}
   const ok = typeof title === 'string' && title.trim() && typeof company === 'string' && typeof location === 'string'
@@ -594,8 +630,13 @@ app.post('/api/contact', (req, res) => {
 
 loadJobs()
   .then(data => {
-    jobsLocal = data.jobs
+    jobsLocal = data.jobs.map(job => ({
+      ...job,
+      role: detectRole(job.title)   // ✅ ADD ROLE HERE
+    }))
+
     skillVocabulary = data.skillVocabulary
+
     console.log(`Loaded ${jobsLocal.length} jobs`)
     console.log(`Loaded ${skillVocabulary.length} skills`)
   })

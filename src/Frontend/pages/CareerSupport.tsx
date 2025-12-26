@@ -45,6 +45,10 @@ useEffect(() => {
       setError('Please upload a PDF resume')
       return
     }
+    if (!selectedJob) {
+      setError('Please select a job position')
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -53,7 +57,7 @@ useEffect(() => {
     try {
       const formData = new FormData()
       formData.append('resume', resumeFile)
-      formData.append('job_id', String(selectedJobId))
+      formData.append('job_id', String(selectedJob.id))
 
       const res = await fetch(`${ML_API}/skill-gap/analyze-pdf`, {
         method: 'POST',
@@ -84,49 +88,47 @@ useEffect(() => {
           Upload your resume to see how well it matches job requirements using AI.
         </p>
 
-        {/* FILE INPUT */}
-        <div className="mt-4 flex items-center gap-3">
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={(e) => {
-              setResumeFile(e.target.files?.[0] || null)
-              setError('')
-              setResult(null)
-            }}
-            className="rounded-full bg-white px-3 py-2 text-sm ring-1 ring-slate-200"
-          />
+        {/* FILE INPUT & JOB SELECTION */}
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="flex-1">
+             <label className="mb-1 block text-sm font-medium text-slate-700">Resume (PDF)</label>
+             <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  setResumeFile(e.target.files?.[0] || null)
+                  setError('')
+                  setResult(null)
+                }}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 focus:border-blue-500 focus:outline-none"
+              />
+          </div>
 
-
-
-
-<select
-  value={selectedJob?.id || ''}
-  onChange={(e) => {
-    const job = jobs.find(j => j.id === Number(e.target.value))
-    setSelectedJob(job)
-  }}
-  className="rounded-lg border p-2 text-sm"
->
-  <option value="">Select Job You Are Applying For</option>
-
-  {jobs.map(job => (
-    <option key={job.id} value={job.id}>
-      {job.title}
-    </option>
-  ))}
-</select>
-
-
-
-
+          <div className="flex-1">
+             <label className="mb-1 block text-sm font-medium text-slate-700">Target Job</label>
+             <select
+                value={selectedJob?.id || ''}
+                onChange={(e) => {
+                  const job = jobs.find(j => j.id === Number(e.target.value))
+                  setSelectedJob(job)
+                }}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">Select Job Position</option>
+                {jobs.map(job => (
+                  <option key={job.id} value={job.id}>
+                    {job.title}
+                  </option>
+                ))}
+              </select>
+          </div>
 
           <button
             onClick={handleAnalyzeResume}
             disabled={loading}
-            className="rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            className="mb-[1px] rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
           >
-            {loading ? 'Analyzing...' : 'Analyze Resume'}
+            {loading ? 'Analyzing...' : 'Analyze'}
           </button>
         </div>
 

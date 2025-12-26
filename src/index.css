@@ -2,6 +2,7 @@
 
 :root { color-scheme: light; }
 html, body, #root { height: 100%; }
+body { overflow-x: hidden; }
 
 @keyframes pan {
   0% { background-position: 0% 50%; }
