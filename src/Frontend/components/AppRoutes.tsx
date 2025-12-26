@@ -122,6 +122,7 @@ export default function AppRoutes({
         <Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} />
       } />
       <Route path="/contact" element={<Contact onOpenMessage={() => setContactOpen(true)} />} />
+      <Route path="/login" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
       <Route path="/signup" element={<Signup onOpenLogin={() => setLoginOpen(true)} onBack={() => setRoute('dashboard')} onOpenForgot={() => setRoute('forgot')} />} />
       <Route path="/forgot" element={<Forgot onBack={() => setRoute('signup')} />} />
       <Route

@@ -14,7 +14,10 @@ export default function Jobs() {
       setLoading(true); setError('')
       try {
         const data: Job[] = await getJobs()
-        if (!stop) setJobs(data)
+        if (!stop) {
+          // Filter out dataset jobs (which have numeric IDs) and keep only DB jobs (string IDs)
+          setJobs(data.filter(j => typeof j.id === 'string'))
+        }
       } catch (e: any) {
         if (!stop) setError(e?.message || 'Failed to load jobs')
       } finally {

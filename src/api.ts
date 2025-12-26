@@ -34,7 +34,7 @@ export async function getEvents() {
 }
 
 export async function getJobs() {
-  const res = await fetch(`${API_BASE}/jobs`)
+  const res = await fetch(`${API_BASE}/jobs?source=db`)
   if (!res.ok) throw new Error('Failed to load jobs')
   return res.json()
 }
