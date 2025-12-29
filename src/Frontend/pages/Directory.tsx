@@ -40,7 +40,7 @@ export default function Directory({ alumni, query, onQueryChange }: { alumni: Al
             {departments.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <select value={batch} onChange={e => { setBatch(e.target.value); resetPage() }} className="rounded-full bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
-            {batches.map(b => <option key={b} value={b}>{b}</option>)}
+            {batches.map((b, idx) => <option key={`${b}-${idx}`} value={b}>{b}</option>)}
           </select>
           <Input value={skill} onChange={e => { setSkill(e.target.value); resetPage() }} placeholder="Filter by skill or title" />
         </div>

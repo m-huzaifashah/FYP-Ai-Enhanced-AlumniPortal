@@ -21,7 +21,7 @@ export default function Jobs({ role }: { role?: 'student' | 'admin' | 'alumni' |
     setLoading(true); setError('')
     try {
       const data: Job[] = await getJobs()
-      setJobs(data.filter(j => typeof j.id === 'string'))
+      setJobs(data)
     } catch (e: any) {
       setError(e?.message || 'Failed to load jobs')
     } finally {
