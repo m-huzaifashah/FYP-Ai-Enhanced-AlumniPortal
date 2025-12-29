@@ -33,6 +33,11 @@ const ROLE_KEYWORDS = {
   enterprise: ["erp", "sap", "oracle"],
 }
 
+
+
+
+
+
 function detectRole(title = '') {
   const t = title.toLowerCase()
 
@@ -43,6 +48,35 @@ function detectRole(title = '') {
   }
   return 'other'
 }
+
+
+
+
+
+
+
+function buildRoleSkillMap(jobs) {
+  const roleSkills = {}
+
+  for (const job of jobs) {
+    if (!roleSkills[job.role]) {
+      roleSkills[job.role] = new Set()
+    }
+
+    job.skills.forEach(skill => {
+      roleSkills[job.role].add(skill)
+    })
+  }
+
+  // Convert Set → Array
+  const result = {}
+  for (const role in roleSkills) {
+    result[role] = Array.from(roleSkills[role]).sort()
+  }
+
+  return result
+}
+
 
 
 const app = express()
@@ -628,21 +662,106 @@ app.post('/api/contact', (req, res) => {
   res.json({ status: 'received' })
 })
 
+let ROLE_SKILLS = {}
+
 loadJobs()
   .then(data => {
     jobsLocal = data.jobs.map(job => ({
       ...job,
-      role: detectRole(job.title)   // ✅ ADD ROLE HERE
+      role: detectRole(job.title)
     }))
 
     skillVocabulary = data.skillVocabulary
 
-    console.log(`Loaded ${jobsLocal.length} jobs`)
-    console.log(`Loaded ${skillVocabulary.length} skills`)
+    // 🔥 BUILD ROLE → SKILLS
+    ROLE_SKILLS = buildRoleSkillMap(jobsLocal)
+
+    console.log('Loaded jobs:', jobsLocal.length)
+    console.log('Roles:', Object.keys(ROLE_SKILLS))
   })
-  .catch(err => {
-    console.error('Failed to load jobs dataset:', err)
+
+  app.get('/api/skills/by-role/:role', (req, res) => {
+  const role = req.params.role
+  const skills = ROLE_SKILLS[role]
+
+  if (!skills) {
+    return res.status(404).json({ error: 'Role not found' })
+  }
+
+  res.json(skills)
+})
+
+app.get('/api/jobs/by-role-level', (req, res) => {
+  const { role, level } = req.query
+
+  if (!role || !level) {
+    return res.status(400).json({ error: 'role and level required' })
+  }
+
+  const filteredJobs = jobsLocal.filter(
+    job => job.role === role && job.level === level
+  )
+
+  res.json(filteredJobs)
+})
+app.get('/api/skills/by-role-level', (req, res) => {
+  const { role, level } = req.query
+
+  if (!role || !level) {
+    return res.status(400).json({ error: 'role and level required' })
+  }
+
+  if (!['intern','junior','senior'].includes(level)) {
+    return res.status(400).json({ error: 'invalid level' })
+  }
+
+  // -----------------------------
+  // 1️⃣ FILTER JOBS
+  // -----------------------------
+  const relevantJobs = jobsLocal.filter(
+    job => job.role === role && job.level === level
+  )
+
+  if (!relevantJobs.length) {
+    return res.json([])
+  }
+
+  // -----------------------------
+  // 2️⃣ COUNT SKILL FREQUENCY
+  // -----------------------------
+  const skillFrequency = {}
+
+  relevantJobs.forEach(job => {
+    job.skills.forEach(skill => {
+      skillFrequency[skill] = (skillFrequency[skill] || 0) + 1
+    })
   })
+
+  // -----------------------------
+  // 3️⃣ SORT BY FREQUENCY
+  // -----------------------------
+  const sortedSkills = Object.entries(skillFrequency)
+    .sort((a, b) => b[1] - a[1])   // high → low
+    .map(([skill]) => skill)
+
+  // -----------------------------
+  // 4️⃣ APPLY LEVEL LIMIT
+  // -----------------------------
+  const LEVEL_SKILL_LIMITS = {
+    intern: 8,
+    junior: 12,
+    senior: 25
+  }
+
+  const limit = LEVEL_SKILL_LIMITS[level]
+
+  const finalSkills = sortedSkills.slice(0, limit)
+
+  // -----------------------------
+  // 5️⃣ RESPONSE
+  // -----------------------------
+  res.json(finalSkills)
+})
 
 
 app.listen(PORT, () => {
