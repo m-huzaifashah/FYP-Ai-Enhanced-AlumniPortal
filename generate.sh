@@ -30,5 +30,5 @@ do
   GIT_COMMITTER_DATE="$DATE" \
   git commit -m "$MSG"
 
-  CURRENT_DATE=$(date -d "$CURRENT_DATE + 7 days" +"%Y-%m-%d")
+  CURRENT_DATE=$(date -d "$CURRENT_DATE + 12 days" +"%Y-%m-%d")
 done
