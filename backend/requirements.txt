@@ -5,3 +5,9 @@ xgboost
 scikit-learn
 numpy
 pandas
+python-multipart
+PyMuPDF
+pytesseract
+pdf2image
+requests
+joblib

@@ -203,7 +203,7 @@ uvicorn server:app --reload --port 8000
 
 The system supports three user roles:
 1.  **Student**: Access to jobs, mentorship, and events.
-2.  **Alumni**: Can post jobs, offer mentorship, and view directory.
+2.  **Alumni**: Can post , offer mentorship, and view directory.
 3.  **Admin**: Full system management capabilities.
 
 ## 🤝 Contributing
@@ -211,5 +211,5 @@ The system supports three user roles:
 1.  Fork the Project
 2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
 3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+4.  Push to the Branch (`git push origin jobsfeature/AmazingFeature`)
 5.  Open a Pull Request
