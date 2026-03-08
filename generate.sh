@@ -1,7 +1,7 @@
 #!/bin/bash
 
-START_DATE="2025-12-30"
-END_DATE="2026-03-08"
+START_DATE="2026-03-08"
+END_DATE="2026-04-03"
 
 CURRENT_DATE="$START_DATE"
 
@@ -30,5 +30,5 @@ do
   GIT_COMMITTER_DATE="$DATE" \
   git commit -m "$MSG"
 
-  CURRENT_DATE=$(date -d "$CURRENT_DATE + 10 days" +"%Y-%m-%d")
+  CURRENT_DATE=$(date -d "$CURRENT_DATE + 6 days" +"%Y-%m-%d")
 done
