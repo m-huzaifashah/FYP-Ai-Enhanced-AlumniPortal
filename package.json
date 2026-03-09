@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js",
+    "ml:dev": "bash -c 'cd backend && source venv/bin/activate && uvicorn server:app --host 127.0.0.1 --port 8000 --reload'",
     "dev:all": "concurrently \"npm run server:dev\" \"npm run web\""
   },
   "dependencies": {

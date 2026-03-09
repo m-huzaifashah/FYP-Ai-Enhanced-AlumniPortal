@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 
 const API_BASE =
-  (import.meta as any).env?.VITE_CORE_API_URL ||
-  'http://localhost:3008/api'
+  (import.meta as any).env?.VITE_API_URL ||
+  '/api'
 
-const ML_API =
+const ML_API_BASE =
   (import.meta as any).env?.VITE_ML_API_URL ||
   'http://127.0.0.1:8000'
 
@@ -54,7 +54,7 @@ export default function CareerSupport() {
       formData.append('level', selectedLevel)
 
       const res = await fetch(
-        `${ML_API}/skill-gap/analyze-role-level`,
+        `${ML_API_BASE}/skill-gap/analyze-role-level`,
         {
           method: 'POST',
           body: formData
