@@ -106,6 +106,7 @@ export const getAlumni = async (req, res) => {
         import('../../src/Frontend/data/alumni.js').then(({ ALUMNI }) => res.json(ALUMNI)).catch(() => res.json([]))
     }
   } catch (e) {
+    console.warn('⚠ Alumni DB query failed, using fallback data:', e.message)
     import('../../src/Frontend/data/alumni.js').then(({ ALUMNI }) => res.json(ALUMNI)).catch(() => res.json([]))
   }
 }
@@ -125,6 +126,7 @@ export const getMentors = async (req, res) => {
         import('../../src/Frontend/data/mentors.js').then(({ MENTORS }) => res.json(MENTORS)).catch(() => res.json([]))
     }
   } catch (e) {
+    console.warn('⚠ Mentors DB query failed, using fallback data:', e.message)
     import('../../src/Frontend/data/mentors.js').then(({ MENTORS }) => res.json(MENTORS)).catch(() => res.json([]))
   }
 }

@@ -9,5 +9,10 @@ python-multipart
 PyMuPDF
 pytesseract
 pdf2image
-requests
+httpx
 joblib
+scipy
+threadpoolctl
+Pillow
+python-dateutil
+python-dotenv

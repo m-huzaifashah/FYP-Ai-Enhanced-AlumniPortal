@@ -29,10 +29,11 @@ export async function initDb() {
     }
 
     try {
-      await mongoose.connect(uri)
+      await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 })
       console.log('Connected to MongoDB via Mongoose')
     } catch (e) {
-      console.warn('Initial MongoDB connection failed. Trying MongoMemoryServer fallback...')
+      console.error('Initial MongoDB connection failed. Error:', e.message)
+      console.warn('Trying MongoMemoryServer fallback...')
       memServer = await MongoMemoryServer.create()
       uri = memServer.getUri()
       await mongoose.connect(uri)

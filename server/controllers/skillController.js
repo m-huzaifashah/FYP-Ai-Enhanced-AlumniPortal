@@ -32,6 +32,11 @@ export const getSkillsByRoleLevel = (req, res) => {
   )
 
   if (!relevantJobs.length) {
+    let fallbackSkills = ROLE_SKILLS[role] || CORE_STACK_SKILLS[role] || []
+    if (fallbackSkills.length > 0) {
+      const LIMIT = { intern: 8, junior: 12, senior: 25 }[level] || 10
+      return res.json(fallbackSkills.slice(0, LIMIT))
+    }
     return res.json([])
   }
 

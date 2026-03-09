@@ -16,6 +16,7 @@ export const getEvents = async (req, res) => {
     })
     res.json(mapped.length ? mapped : eventsLocal)
   } catch (e) {
+    console.warn('⚠ Events DB query failed, using fallback data:', e.message)
     res.json(eventsLocal)
   }
 }
