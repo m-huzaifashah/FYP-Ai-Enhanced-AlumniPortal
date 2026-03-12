@@ -2,7 +2,7 @@ import Event from '../models/Event.js'
 
 // In-memory fallback
 let eventsLocal = []
-import('../../src/Frontend/data/events.js').then(module => {
+import('../../client/src/data/events.js').then(module => {
     eventsLocal = [...module.EVENTS]
 }).catch(e => console.warn('Could not load local events data', e))
 

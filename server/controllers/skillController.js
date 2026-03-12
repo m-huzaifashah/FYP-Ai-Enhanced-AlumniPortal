@@ -1,5 +1,5 @@
 import { skillVocabulary, ROLE_SKILLS, jobsLocal } from '../controllers/jobController.js'
-import { CORE_STACK_SKILLS } from '../../backend-core/constants/skillOntology.js'
+import { CORE_STACK_SKILLS } from '../constants/skillOntology.js'
 
 export const getSkills = (req, res) => {
   res.json(skillVocabulary)

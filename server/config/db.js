@@ -10,11 +10,11 @@ import Alumni from '../models/Alumni.js'
 import Service from '../models/Service.js'
 import User from '../models/User.js'
 
-import { EVENTS } from '../../src/Frontend/data/events.js'
-import { JOBS } from '../../src/Frontend/data/jobs.js'
-import { MENTORS } from '../../src/Frontend/data/mentors.js'
-import { ALUMNI } from '../../src/Frontend/data/alumni.js'
-import { SERVICES } from '../../src/Frontend/data/services.js'
+import { EVENTS } from '../../client/src/data/events.js'
+import { JOBS } from '../../client/src/data/jobs.js'
+import { MENTORS } from '../../client/src/data/mentors.js'
+import { ALUMNI } from '../../client/src/data/alumni.js'
+import { SERVICES } from '../../client/src/data/services.js'
 
 dotenv.config()
 

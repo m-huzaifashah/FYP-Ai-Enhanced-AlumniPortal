@@ -14,7 +14,13 @@ import skillRoutes from './routes/skillRoutes.js'
 import contactRoutes from './routes/contactRoutes.js'
 import serviceRoutes from './routes/serviceRoutes.js'
 
-dotenv.config()
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+dotenv.config({ path: path.join(__dirname, '..', '.env') })
 const PORT = process.env.PORT || 3008
 
 const app = express()

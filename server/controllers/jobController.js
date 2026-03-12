@@ -1,5 +1,5 @@
 import Job from '../models/Job.js'
-import { loadJobs } from '../../backend-core/utils/loadjobs.js'
+import { loadJobs } from '../utils/loadjobs.js'
 import { detectRole, buildRoleSkillMap } from '../utils/jobHelpers.js'
 
 export let jobsLocal = []

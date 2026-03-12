@@ -12,10 +12,10 @@ export const getServices = async (req, res) => {
     if (mapped.length) {
         res.json(mapped)
     } else {
-        import('../../src/Frontend/data/services.js').then(({ SERVICES }) => res.json(SERVICES)).catch(() => res.json([]))
+        import('../../client/src/data/services.js').then(({ SERVICES }) => res.json(SERVICES)).catch(() => res.json([]))
     }
   } catch (e) {
     console.warn('⚠ Services DB query failed, using fallback data:', e.message)
-    import('../../src/Frontend/data/services.js').then(({ SERVICES }) => res.json(SERVICES)).catch(() => res.json([]))
+    import('../../client/src/data/services.js').then(({ SERVICES }) => res.json(SERVICES)).catch(() => res.json([]))
   }
 }
