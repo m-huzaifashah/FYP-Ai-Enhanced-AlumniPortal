@@ -109,3 +109,33 @@ export const signup = async (req, res) => {
     return res.status(500).json({ error: `Signup failed: ${e?.message || 'unknown error'}` })
   }
 }
+
+export const registerAdmin = async (req, res) => {
+  const { name, email, password } = req.body || {}
+  const emailOk = typeof email === 'string' && /[^\s@]+@[^\s@]+\.[^\s@]{2,}/.test(email)
+  const passOk = typeof password === 'string' && password.length >= 6
+  const nameOk = typeof name === 'string' && name.trim().length >= 2
+  
+  if (!emailOk || !passOk || !nameOk) return res.status(400).json({ error: 'Invalid admin data' })
+  
+  try {
+    const existing = await User.findOne({ email })
+    if (existing) return res.status(409).json({ error: 'Email already registered' })
+    
+    const hashedPassword = await hashPassword(password)
+    const user = await User.create({ 
+      email, 
+      name, 
+      role: 'admin', 
+      passwordHash: hashedPassword 
+    })
+    
+    return res.status(201).json({ id: String(user._id), email: user.email, name: user.name, role: user.role })
+  } catch (e) {
+    if (e.code === 11000) {
+      return res.status(409).json({ error: 'Email already registered' })
+    }
+    console.error('Admin signup error', e?.message || e)
+    return res.status(500).json({ error: `Admin creation failed: ${e?.message || 'unknown error'}` })
+  }
+}

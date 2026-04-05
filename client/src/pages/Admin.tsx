@@ -1,11 +1,42 @@
 import React, { useMemo, useState } from 'react'
 import { Button, Card, Counter, Input, Modal } from '../ui'
-import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob } from '../api'
+import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob, getTickets, updateTicketStatus, createAdminAccount } from '../api'
 
 type Event = { id: number | string; title: string; date: string; location: string; description: string }
 type Job = { id: number | string; title: string; company: string; location: string; link: string }
 
 export default function Admin({ events, jobs, alumniCount, onEventsChanged, dataMode }: { events: Event[]; jobs: Job[]; alumniCount: number; onEventsChanged?: (next: Event[]) => void; dataMode?: 'db' | 'memory' }) {
+  const [admOpen, setAdmOpen] = useState(false)
+  const [admName, setAdmName] = useState('')
+  const [admEmail, setAdmEmail] = useState('')
+  const [admPass, setAdmPass] = useState('')
+  const [admStatus, setAdmStatus] = useState('')
+  const [admLoading, setAdmLoading] = useState(false)
+
+  const handleCreateAdmin = async () => {
+    if (admName.length < 2 || !admEmail.includes('@') || admPass.length < 6) {
+       setAdmStatus('Please fill all fields properly (password >= 6 chars)');
+       return;
+    }
+    setAdmLoading(true)
+    setAdmStatus('')
+    try {
+      await createAdminAccount({ name: admName, email: admEmail, password: admPass })
+      setAdmStatus('Success: Admin account created!')
+      setTimeout(() => {
+        setAdmOpen(false)
+        setAdmName('')
+        setAdmEmail('')
+        setAdmPass('')
+        setAdmStatus('')
+      }, 1500)
+    } catch(err: any) {
+      setAdmStatus(err?.message || 'Failed to create admin')
+    } finally {
+      setAdmLoading(false)
+    }
+  }
+
   const [evs, setEvs] = useState<Event[]>(events)
   const [evOpen, setEvOpen] = useState(false)
   const [editId, setEditId] = useState<number | string | null>(null)
@@ -173,13 +204,27 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     setJobsState(prev => prev.filter(x => String(x.id) !== String(id)))
   }
 
-  const REPORTS = useMemo(() => ([
-    { id: 1, user: 'Aisha Khan', type: 'Issue', date: '2025-10-01', status: 'Open' },
-    { id: 2, user: 'Bilal Ahmed', type: 'Request', date: '2025-10-03', status: 'Open' },
-    { id: 3, user: 'Sara Waheed', type: 'Issue', date: '2025-10-05', status: 'Resolved' },
-    { id: 4, user: 'Usman Ali', type: 'Request', date: '2025-10-06', status: 'Open' },
-  ]), [])
-  const [reports, setReports] = useState(REPORTS)
+  const [reports, setReports] = React.useState<any[]>([])
+  const [reportsLoading, setReportsLoading] = React.useState(false)
+
+  React.useEffect(() => {
+    if (tab === 'reports') {
+      setReportsLoading(true)
+      getTickets().then(res => {
+        setReports(res)
+      }).catch(err => console.error(err))
+      .finally(() => setReportsLoading(false))
+    }
+  }, [tab])
+
+  const handleUpdateTicket = async (id: string, newStatus: string) => {
+    try {
+      const updated = await updateTicketStatus(id, newStatus)
+      setReports(prev => prev.map(t => t._id === id ? updated : t))
+    } catch(err) {
+      alert('Failed to update ticket')
+    }
+  }
 
   return (
     <section className="space-y-8">
@@ -188,6 +233,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
         {dataMode && (
           <span className={"text-xs rounded-full px-2 py-1 " + (dataMode === 'db' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800')}>{dataMode === 'db' ? 'Database' : 'In-Memory'}</span>
         )}
+        <Button variant="primary" className="ml-auto text-sm py-1.5 px-3" onClick={() => setAdmOpen(true)}>+ Add Admin</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -309,60 +355,138 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
 
       {tab === 'reports' && (
         <Card className="p-6">
-          <div className="text-xl font-semibold">User Reports</div>
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left text-slate-600">
-                  <th className="px-3 py-2">User</th>
-                  <th className="px-3 py-2">Type</th>
-                  <th className="px-3 py-2">Date</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports.map(r => (
-                  <tr key={r.id} className="border-t border-slate-200">
-                    <td className="px-3 py-2">{r.user}</td>
-                    <td className="px-3 py-2">{r.type}</td>
-                    <td className="px-3 py-2">{new Date(r.date).toLocaleDateString()}</td>
-                    <td className="px-3 py-2">{r.status}</td>
-                    <td className="px-3 py-2">
-                      <Button variant="outline" onClick={() => setReports(prev => prev.map(x => x.id === r.id ? { ...x, status: 'Resolved' } : x))}>Resolve</Button>
-                    </td>
+          <div className="text-xl font-semibold">Support Tickets</div>
+          {reportsLoading ? (
+            <div className="mt-4 text-sm text-slate-500">Loading tickets...</div>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-600">
+                    <th className="px-3 py-2">User</th>
+                    <th className="px-3 py-2">Summary</th>
+                    <th className="px-3 py-2">Type</th>
+                    <th className="px-3 py-2">Date</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {reports.length === 0 && (
+                    <tr><td colSpan={6} className="px-3 py-4 text-center text-slate-500">No tickets found.</td></tr>
+                  )}
+                  {reports.map(r => (
+                    <tr key={r._id} className="border-t border-slate-200">
+                      <td className="px-3 py-2">
+                        <div className="font-medium">{r.createdBy?.name || 'Local User'}</div>
+                        <div className="text-xs text-slate-500">{r.createdBy?.email}</div>
+                      </td>
+                      <td className="px-3 py-2 font-medium">{r.title}</td>
+                      <td className="px-3 py-2">{r.type}</td>
+                      <td className="px-3 py-2">{new Date(r.createdAt).toLocaleDateString()}</td>
+                      <td className="px-3 py-2">
+                        <span className={"px-2 py-1 rounded-full text-xs font-medium " + (r.status === 'Resolved' ? 'bg-green-100 text-green-700' : r.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 flex items-center gap-2">
+                        {r.status === 'Open' && (
+                          <>
+                            <Button variant="outline" onClick={() => handleUpdateTicket(r._id, 'Resolved')}>Resolve</Button>
+                            <Button variant="outline" className="text-red-600 hover:ring-red-600" onClick={() => handleUpdateTicket(r._id, 'Rejected')}>Reject</Button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       )}
 
-      <Modal open={evOpen} onClose={() => setEvOpen(false)} title={editId == null ? 'Add Event' : 'Edit Event'}>
-        <div className="space-y-3">
-          {evError && <div className="rounded-md bg-red-900/30 text-red-100 px-3 py-2 text-sm">{evError}</div>}
-          <Input value={evTitle} onChange={e=>setEvTitle(e.target.value)} placeholder="Title" />
-          <input type="date" value={evDate} onChange={e=>setEvDate(e.target.value)} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-slate-900 ring-1 ring-slate-200 shadow-sm" />
-          <Input value={evLocation} onChange={e=>setEvLocation(e.target.value)} placeholder="Location" />
-          <textarea value={evDesc} onChange={e=>setEvDesc(e.target.value)} rows={4} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-slate-900 ring-1 ring-slate-200 shadow-sm" placeholder="Description" />
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setEvOpen(false)}>Back</Button>
-            <Button variant="primary" onClick={saveEvent} disabled={evSaving}>{evSaving ? 'Saving…' : 'Save'}</Button>
+      <Modal open={evOpen} onClose={() => setEvOpen(false)} title={editId == null ? 'Add Event' : 'Edit Event'} titleClassName="text-white text-xl">
+        <div className="space-y-5 pt-3">
+          {evError && <div className="rounded-md bg-red-500/20 text-red-200 px-4 py-3 text-sm font-medium border border-red-500/30">{evError}</div>}
+          
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Event Title</label>
+            <Input value={evTitle} onChange={e=>setEvTitle(e.target.value)} placeholder="e.g. Annual Alumni Meetup 2025" className="w-full" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Date</label>
+              <input type="date" value={evDate} onChange={e=>setEvDate(e.target.value)} className="w-full rounded-full bg-white px-4 py-2 text-sm text-slate-900 placeholder-slate-500 ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm transition-shadow" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Location</label>
+              <Input value={evLocation} onChange={e=>setEvLocation(e.target.value)} placeholder="e.g. Main Auditorium" className="w-full" />
+            </div>
+          </div>
+
+          <div>
+             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Description</label>
+             <textarea value={evDesc} onChange={e=>setEvDesc(e.target.value)} rows={4} className="w-full rounded-2xl bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-500 ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm transition-shadow" placeholder="Share details about the event..." />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <Button variant="outlineWhite" className="!ring-1 !ring-slate-600 !text-slate-300 hover:!bg-slate-800 hover:!text-white" onClick={() => setEvOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={saveEvent} disabled={evSaving}>{evSaving ? 'Saving…' : 'Save Event'}</Button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={jobOpen} onClose={() => setJobOpen(false)} title={jobEditId == null ? 'Add Job' : 'Edit Job'}>
-        <div className="space-y-3">
-          <Input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="Title" />
-          <Input value={jobCompany} onChange={e=>setJobCompany(e.target.value)} placeholder="Company" />
-          <Input value={jobLocation} onChange={e=>setJobLocation(e.target.value)} placeholder="Location" />
-          <Input value={jobLink} onChange={e=>setJobLink(e.target.value)} placeholder="Link" />
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setJobOpen(false)}>Back</Button>
-            <Button variant="primary" onClick={saveJob}>Save</Button>
+      <Modal open={jobOpen} onClose={() => setJobOpen(false)} title={jobEditId == null ? 'Add Job' : 'Edit Job'} titleClassName="text-white text-xl">
+        <div className="space-y-5 pt-3">
+          <div>
+             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Job Title</label>
+             <Input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="e.g. Senior Software Engineer" className="w-full" />
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Company</label>
+              <Input value={jobCompany} onChange={e=>setJobCompany(e.target.value)} placeholder="e.g. Google" className="w-full" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Location</label>
+              <Input value={jobLocation} onChange={e=>setJobLocation(e.target.value)} placeholder="e.g. Remote / New York" className="w-full" />
+            </div>
+          </div>
+
+          <div>
+             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Application Link</label>
+             <Input value={jobLink} onChange={e=>setJobLink(e.target.value)} placeholder="https://careers.company.com/..." className="w-full" />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <Button variant="outlineWhite" className="!ring-1 !ring-slate-600 !text-slate-300 hover:!bg-slate-800 hover:!text-white" onClick={() => setJobOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={saveJob}>Save Job</Button>
+          </div>
+        </div>
+      </Modal>
+    <Modal open={admOpen} onClose={() => setAdmOpen(false)} title="Create Admin Account" titleClassName="text-white text-xl">
+        <div className="space-y-4 pt-4">
+          {admStatus && <div className={(admStatus.includes('Success') ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200') + ' border px-3 py-2 rounded-md text-sm'}>{admStatus}</div>}
+          
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Full Name</label>
+            <Input value={admName} onChange={e => setAdmName(e.target.value)} placeholder="Admin Name" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Email Address</label>
+            <Input value={admEmail} onChange={e => setAdmEmail(e.target.value)} placeholder="admin@example.com" type="email" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Password</label>
+            <Input value={admPass} onChange={e => setAdmPass(e.target.value)} placeholder="Top secret password" type="password" />
+          </div>
+          
+          <Button variant="primary" onClick={handleCreateAdmin} disabled={admLoading} className="w-full mt-2">
+            {admLoading ? 'Creating...' : 'Create Admin'}
+          </Button>
         </div>
       </Modal>
     </section>

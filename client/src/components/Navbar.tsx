@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 // import { IconButton, Icon } from '../ui'
 
-export default function Navbar({ authed, isAdmin, onOpenLogin, onOpenSignup, onLogout }: { authed: boolean; isAdmin: boolean; onOpenLogin: () => void; onOpenSignup: () => void; onLogout: () => void }) {
+export default function Navbar({ authed, isAdmin, onOpenLogin, onOpenSignup, onLogout, onOpenTicket }: { authed: boolean; isAdmin: boolean; onOpenLogin: () => void; onOpenSignup: () => void; onLogout: () => void; onOpenTicket?: () => void }) {
   const [homeOpen, setHomeOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const location = useLocation()
@@ -84,6 +84,7 @@ export default function Navbar({ authed, isAdmin, onOpenLogin, onOpenSignup, onL
                     <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-white ring-1 ring-black/5 shadow-xl text-slate-800 z-50 py-2">
                       <Link to="/profile" onClick={() => setAccountOpen(false)} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">Profile</Link>
                       <Link to="/settings" onClick={() => setAccountOpen(false)} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors">Settings</Link>
+                      <button onClick={() => { setAccountOpen(false); if (onOpenTicket) onOpenTicket() }} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors text-blue-600">Support Ticket</button>
                       <div className="h-px bg-slate-100 my-1" />
                       <button onClick={() => { setAccountOpen(false); onLogout() }} className="block w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 text-red-600 transition-colors">Sign Out</button>
                     </div>

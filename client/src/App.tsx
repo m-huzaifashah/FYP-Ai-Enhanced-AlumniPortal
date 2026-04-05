@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 import LoginModal from './components/LoginModal'
 import SignupModal from './components/SignupModal'
 import ContactModal from './components/ContactModal'
+import TicketModal from './components/TicketModal'
 import AppRoutes from './components/AppRoutes'
 import { useInitialData } from './hooks/useInitialData'
 import { useFilterAlumni, useFilterServices } from './utils/filter'
@@ -24,6 +25,7 @@ export default function App() {
   const [loginOpen, setLoginOpen] = useState(false)
   const [signupOpen, setSignupOpen] = useState(false)
   const [contactOpen, setContactOpen] = useState(false)
+  const [ticketOpen, setTicketOpen] = useState(false)
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -83,6 +85,7 @@ export default function App() {
         onOpenLogin={() => setLoginOpen(true)} 
         onOpenSignup={() => setSignupOpen(true)} 
         onLogout={handleLogout}
+        onOpenTicket={() => setTicketOpen(true)}
       />
 
       <div className="mx-auto max-w-7xl">
@@ -162,6 +165,7 @@ export default function App() {
       
 
       <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      <TicketModal open={ticketOpen} onClose={() => setTicketOpen(false)} />
     </div>
   )
 }

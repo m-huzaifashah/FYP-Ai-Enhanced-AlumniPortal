@@ -130,3 +130,20 @@ export const analyzeSkillGapRoleLevel = async (resume: File, role: string, level
 // ===============================
 export const postContact = (payload: { name: string, email: string, message: string }) =>
   post('/contact', payload).catch(errorInterceptor('Failed to send message'))
+
+// ===============================
+// TICKETS (SUPPORT)
+// ===============================
+export const createTicket = (payload: { title: string, description: string, type?: string }) =>
+  post('/tickets', payload).catch(errorInterceptor('Failed to create ticket'))
+
+export const getTickets = () => get('/tickets').catch(errorInterceptor('Failed to load tickets'))
+
+export const updateTicketStatus = (id: string | number, status: string) =>
+  put(`/tickets/${id}/status`, { status }).catch(errorInterceptor('Failed to update ticket status'))
+
+// ===============================
+// USERS/ADMIN
+// ===============================
+export const createAdminAccount = (payload: { name: string, email: string, password: string }) =>
+  post('/admin', payload).catch(errorInterceptor('Failed to create admin'))

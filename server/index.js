@@ -13,6 +13,7 @@ import jobRoutes from './routes/jobRoutes.js'
 import skillRoutes from './routes/skillRoutes.js'
 import contactRoutes from './routes/contactRoutes.js'
 import serviceRoutes from './routes/serviceRoutes.js'
+import ticketRoutes from './routes/ticketRoutes.js'
 
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -68,6 +69,7 @@ app.use('/api/jobs', jobRoutes)
 app.use('/api/skills', skillRoutes)
 app.use('/api/contact', contactRoutes)
 app.use('/api/services', serviceRoutes)
+app.use('/api/tickets', ticketRoutes)
 
 import { getRoles } from './controllers/jobController.js'
 app.get('/api/roles', getRoles)

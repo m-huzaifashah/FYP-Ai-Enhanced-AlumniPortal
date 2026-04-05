@@ -11,6 +11,7 @@
     "install:all": "npm install && npm --prefix client install && npm --prefix server install"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "concurrently": "^9.0.0",
+    "@testsprite/testsprite-mcp": "^0.0.32"
   }
 }
