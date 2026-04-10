@@ -5,14 +5,12 @@ import bcrypt from 'bcrypt'
 
 import Event from '../models/Event.js'
 import Job from '../models/Job.js'
-import Mentor from '../models/Mentor.js'
 import Alumni from '../models/Alumni.js'
 import Service from '../models/Service.js'
 import User from '../models/User.js'
 
 import { EVENTS } from '../../client/src/data/events.js'
 import { JOBS } from '../../client/src/data/jobs.js'
-import { MENTORS } from '../../client/src/data/mentors.js'
 import { ALUMNI } from '../../client/src/data/alumni.js'
 import { SERVICES } from '../../client/src/data/services.js'
 
@@ -52,7 +50,6 @@ export async function initDb() {
 
       await seedIfEmpty(Event, EVENTS)
       await seedIfEmpty(Job, JOBS)
-      await seedIfEmpty(Mentor, MENTORS)
       await seedIfEmpty(Alumni, ALUMNI)
       await seedIfEmpty(Service, SERVICES)
 

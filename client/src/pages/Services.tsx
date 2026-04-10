@@ -25,7 +25,6 @@ export default function Services({
 }) {
   const SERVICE_IMAGES: Record<string, string> = {
     jobs: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
-    mentorship: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
     events: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
     scholarship: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
     transcript: 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png',
@@ -35,11 +34,11 @@ export default function Services({
   }
   return (
     <section className="space-y-8">
-      <div className="rounded-2xl bg-[#1669bb] text-white px-6 py-10 shadow-lg">
+      <div className="rounded-2xl bg-primary text-white px-6 py-10 shadow-lg">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="text-3xl font-bold">Alumni Services</div>
-            <p className="mt-2 text-blue-100 max-w-2xl">Discover exclusive resources, benefits, and programs designed to empower alumni, strengthen connections, and celebrate achievements.</p>
+            <p className="mt-2 text-primary max-w-2xl">Discover exclusive resources, benefits, and programs designed to empower alumni, strengthen connections, and celebrate achievements.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outlineWhite" onClick={() => onOpenService('contact')}>Contact Support</Button>
@@ -47,16 +46,16 @@ export default function Services({
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-3 text-center">
           <div className="rounded-xl ring-1 ring-white/20 bg-white/10 p-4 backdrop-blur-sm">
-            <div className="text-xs text-blue-100 uppercase tracking-wider font-semibold">Available Services</div>
+            <div className="text-xs text-primary uppercase tracking-wider font-semibold">Available Services</div>
             <div className="text-2xl font-bold mt-1">{services.length}</div>
           </div>
           <div className="rounded-xl ring-1 ring-white/20 bg-white/10 p-4 backdrop-blur-sm">
-            <div className="text-xs text-blue-100 uppercase tracking-wider font-semibold">Categories</div>
+            <div className="text-xs text-primary uppercase tracking-wider font-semibold">Categories</div>
             <div className="text-2xl font-bold mt-1">4</div>
           </div>
           <div className="rounded-xl ring-1 ring-white/20 bg-white/10 p-4 backdrop-blur-sm">
-            <div className="text-xs text-blue-100 uppercase tracking-wider font-semibold">Featured</div>
-            <div className="text-2xl font-bold mt-1">Mentorship</div>
+            <div className="text-xs text-primary uppercase tracking-wider font-semibold">Featured</div>
+            <div className="text-2xl font-bold mt-1">Career</div>
           </div>
         </div>
       </div>
@@ -66,10 +65,10 @@ export default function Services({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="Search services"
-          className="w-full rounded-lg ring-1 ring-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-all duration-200 focus:ring-2 focus:ring-blue-600 focus:outline-none hover:ring-slate-300"
+          className="w-full rounded-lg ring-1 ring-secondary bg-white px-4 py-2.5 text-sm text-primary placeholder-slate-400 shadow-sm transition-all duration-200 focus:ring-2 focus:ring-primary focus:outline-none hover:ring-secondary"
         />
         <svg
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none"
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary pointer-events-none"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -89,14 +88,14 @@ export default function Services({
             key={c}
             onClick={() => onCategoryChange(c)}
             className={(category === c
-              ? 'bg-[#1669bb] text-white shadow-md ring-1 ring-[#1669bb]'
-              : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-[#1669bb] hover:ring-[#1669bb]') + ' rounded-full px-4 py-1.5 text-sm font-medium transition-all'}
+              ? 'bg-primary text-white shadow-md ring-1 ring-primary'
+              : 'bg-white text-primary ring-1 ring-secondary hover:bg-light-section hover:text-primary hover:ring-primary') + ' rounded-full px-4 py-1.5 text-sm font-medium transition-all'}
           >{c}</button>
         ))}
       </div>
 
       {services.length === 0 && (
-        <div className="rounded-xl bg-white ring-1 ring-slate-200 p-4 text-sm text-slate-700">No services match your search or category.</div>
+        <div className="rounded-xl bg-white ring-1 ring-secondary p-4 text-sm text-primary">No services match your search or category.</div>
       )}
 
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

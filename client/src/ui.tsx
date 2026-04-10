@@ -1,40 +1,43 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { animate, motion, useMotionValue, useTransform, useInView } from 'framer-motion'
 
 export function Modal({ open, onClose, title, children, titleClassName = '' }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; titleClassName?: string }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="absolute inset-0 grid place-items-center p-3 sm:p-4">
-        <div className="relative w-full max-w-[92vw] sm:max-w-md rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6 transition-all duration-300">
-          <button aria-label="Close" onClick={onClose} className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-transform duration-200 hover:scale-105">
-            <Icon name="close" />
-          </button>
-          <div className={`text-base sm:text-lg font-semibold pr-10 ${titleClassName}`}>{title}</div>
-          <div className="mt-3">{children}</div>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-[92vw] sm:max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-stone-900 p-4 sm:p-8 transition-all duration-300 shadow-2xl custom-scrollbar">
+        <button aria-label="Close" onClick={onClose} className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all duration-200 z-10">
+          <Icon name="close" />
+        </button>
+        <div className={`text-xl sm:text-2xl font-bold text-white tracking-tight ${titleClassName}`}>{title}</div>
+        <div className="mt-4">{children}</div>
       </div>
     </div>
   )
 }
 
-export function Counter({ to, duration = 1200 }: { to: number; duration?: number }) {
-  const [v, setV] = useState(0)
+
+export function Counter({ to, duration = 2 }: { to: number; duration?: number }) {
+  const [display, setDisplay] = useState(0)
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, amount: 0.1 })
+
   useEffect(() => {
-    const start = performance.now()
-    let raf = 0
-    const tick = (t: number) => {
-      const p = Math.min((t - start) / duration, 1)
-      setV(Math.round(p * to))
-      if (p < 1) raf = requestAnimationFrame(tick)
+    if (isInView) {
+      const controls = animate(0, to, {
+        duration,
+        ease: "easeOut",
+        onUpdate: (v) => setDisplay(Math.round(v))
+      })
+      return () => controls.stop()
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [to, duration])
-  return <span>{v.toLocaleString()}</span>
+  }, [isInView, to, duration])
+
+  return <span ref={ref}>{display.toLocaleString()}</span>
 }
 
-function useInView(threshold = 0.2) {
+function useIntersectionReveal(threshold = 0.2) {
   const ref = useRef<HTMLDivElement | null>(null)
   const [inView, setInView] = useState(false)
   useEffect(() => {
@@ -50,7 +53,7 @@ function useInView(threshold = 0.2) {
 }
 
 export function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const { ref, inView } = useInView(0.15)
+  const { ref, inView } = useIntersectionReveal(0.15)
   return (
     <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={(inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4') + ' transition-[opacity,transform] duration-700 ease-out'}>
       {children}
@@ -60,17 +63,17 @@ export function Reveal({ children, delay = 0 }: { children: React.ReactNode; del
 
 export function IconCard({ title, src, description, onClick }: { title: string; src: string; description?: string; onClick?: () => void }) {
   return (
-    <div onClick={onClick} className="cursor-pointer rounded-2xl overflow-hidden bg-slate-50 ring-1 ring-slate-200 shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
+    <div onClick={onClick} className="cursor-pointer rounded-2xl overflow-hidden bg-light-section ring-1 ring-secondary shadow-[0_10px_25px_rgba(0,0,0,0.08)]">
       <img
         src={src}
         alt={title}
-        className="w-full h-48 md:h-56 object-contain rounded-t-2xl bg-slate-100"
+        className="w-full h-48 md:h-56 object-contain rounded-t-2xl bg-secondary"
         onError={(e) => { (e.currentTarget as HTMLImageElement).src = `https://placehold.co/900x360/F1F5F9/0B4C72?text=${encodeURIComponent(title.split(' ')[0])}` }}
       />
       <div className="p-5 md:p-6 text-center">
-        <div className="text-lg md:text-xl font-semibold text-slate-900">{title}</div>
+        <div className="text-lg md:text-xl font-semibold text-primary">{title}</div>
         {description && (
-          <p className="mt-2 text-sm md:text-base text-slate-700 leading-relaxed">
+          <p className="mt-2 text-sm md:text-base text-primary leading-relaxed">
             {description}
           </p>
         )}
@@ -83,30 +86,30 @@ export function Button({ children, onClick, variant = 'primary', className = '',
   const base = 'inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition shadow-sm active:translate-y-[1px]'
   const styles =
     variant === 'primary'
-      ? 'bg-[#1669bb] text-white hover:bg-[#125a9e] shadow-md'
+      ? 'bg-primary text-white hover:bg-primary/90 shadow-md'
       : variant === 'outline'
-      ? 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-[#1669bb] hover:ring-[#1669bb]'
+      ? 'bg-white text-primary ring-1 ring-secondary hover:bg-light-section hover:text-primary hover:ring-primary'
       : variant === 'brand'
-      ? 'bg-[#1669bb] text-white hover:bg-[#125a9e]'
+      ? 'bg-primary text-white hover:bg-primary/90'
       : variant === 'outlineWhite'
       ? 'bg-transparent text-white ring-2 ring-white hover:bg-white/10'
-      : 'bg-white/70 text-slate-800 ring-1 ring-slate-200'
+      : 'bg-white/70 text-primary ring-1 ring-secondary'
   return (
     <button disabled={disabled} onClick={onClick} className={`${base} ${styles} transition-transform duration-150 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${className}`}>{children}</button>
   )
 }
 
 export function Input({ value, onChange, placeholder, className = '' }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder?: string; className?: string }) {
-  return <input value={value} onChange={onChange} placeholder={placeholder} className={`rounded-full bg-white px-4 py-2 text-sm text-slate-900 placeholder-slate-500 ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm transition-shadow duration-150 ${className}`} />
+  return <input value={value} onChange={onChange} placeholder={placeholder} className={`rounded-full bg-white px-4 py-2 text-sm text-primary placeholder-slate-500 ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-shadow duration-150 ${className}`} />
 }
 
 export function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-2xl bg-white/70 ring-1 ring-slate-200 shadow-sm backdrop-blur-sm transition-transform duration-200 hover:-translate-y-[2px] hover:shadow-lg ${className}`}>{children}</div>
+  return <div className={`rounded-2xl bg-white/70 ring-1 ring-secondary shadow-sm backdrop-blur-sm transition-transform duration-200 hover:-translate-y-[2px] hover:shadow-lg ${className}`}>{children}</div>
 }
 
 export function IconButton(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode; className?: string }) {
   const { children, className = '', ...rest } = props
-  return <button {...rest} className={`inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-slate-200 text-slate-700 hover:ring-blue-400 shadow-sm transition-transform duration-150 hover:scale-[1.05] ${className}`}>{children}</button>
+  return <button {...rest} className={`inline-flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-secondary text-primary hover:ring-primary hover:text-primary shadow-sm transition-transform duration-150 hover:scale-[1.05] ${className}`}>{children}</button>
 }
 
 export function Icon({ name, className = '' }: { name: 'bell' | 'calendar' | 'close' | 'twitter' | 'linkedin' | 'facebook' | 'shield'; className?: string }) {
@@ -131,5 +134,17 @@ export function Icon({ name, className = '' }: { name: 'bell' | 'calendar' | 'cl
   )
   return (
     <svg viewBox="0 0 24 24" {...props} className={className}><path d="M22 12a10 10 0 11-20 0 10 10 0 1120 0zm-6-4h-2v2H9v2h5v2h2v-2h2v-2h-2V8z"/></svg>
+  )
+}
+
+export function LoadingScreen() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] w-full animate-in fade-in duration-300">
+      <div className="relative flex items-center justify-center">
+        <div className="absolute h-32 w-32 rounded-full border-4 border-secondary border-t-accent animate-spin" />
+        <img src="/logo.png" alt="Loading" className="h-20 w-20 object-contain drop-shadow-md animate-pulse" />
+      </div>
+      <div className="mt-8 text-primary font-medium tracking-widest uppercase text-sm animate-pulse">Loading</div>
+    </div>
   )
 }

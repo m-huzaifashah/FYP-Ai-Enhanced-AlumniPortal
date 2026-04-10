@@ -30,17 +30,18 @@ export default function TicketModal({ open, onClose }: { open: boolean; onClose:
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Raise a Support Ticket">
-      <div className="space-y-4">
+    <Modal open={open} onClose={onClose} title="Raise a Support Ticket" titleClassName="text-center w-full">
+      <div className="space-y-5 pt-4">
+        <p className="text-center text-sm text-white/60 -mt-4 mb-2">Need help? Submit a ticket and our team will get back to you.</p>
         {status && (
-          <div className={(status === 'Success' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200') + ' rounded-md border px-4 py-3 text-sm'}>
+          <div className={(status === 'Success' ? 'bg-secondary text-primary border-green-200' : 'bg-accent text-accent border-red-200') + ' rounded-md border px-4 py-3 text-sm'}>
             {status === 'Success' ? 'Your ticket has been submitted successfully.' : status}
           </div>
         )}
         
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 ml-1">Type</label>
-          <select value={type} onChange={e => setType(e.target.value)} className="w-full rounded-full bg-white px-4 py-2 text-sm text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm appearance-none">
+          <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Category / Type</label>
+          <select value={type} onChange={e => setType(e.target.value)} className="w-full rounded-xl bg-white px-4 py-2.5 text-sm text-primary border border-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm appearance-none">
             <option value="Issue">Technical Issue / Bug</option>
             <option value="Request">Feature Request or Access</option>
             <option value="Other">Other Inquiry</option>
@@ -48,17 +49,17 @@ export default function TicketModal({ open, onClose }: { open: boolean; onClose:
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 ml-1">Summary</label>
-          <input value={title} onChange={e => setTitle(e.target.value)} className="w-full rounded-full bg-white px-4 py-2 text-sm text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm" placeholder="Brief summary of your issue" />
+          <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Summary</label>
+          <input value={title} onChange={e => setTitle(e.target.value)} className="w-full rounded-xl bg-white px-4 py-3 text-sm text-primary border border-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm transition-all" placeholder="Brief summary of your issue" />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 ml-1">Detailed Description</label>
-          <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full rounded-2xl bg-white px-4 py-3 text-sm text-slate-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm" placeholder="Please provide as much detail as possible..." rows={4} />
+          <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Detailed Description</label>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full rounded-xl bg-white px-4 py-3 text-sm text-primary border border-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm transition-all" placeholder="Please provide as much detail as possible..." rows={4} />
         </div>
 
-        <button onClick={submit} disabled={!canSubmit} className={(canSubmit ? '' : 'opacity-50 cursor-not-allowed') + ' w-full rounded-full bg-[#1669bb] px-4 py-2 text-sm font-medium text-white hover:bg-[#125a9e] transition-colors mt-2 shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-blue-600'}>
-          {loading ? 'Submitting...' : 'Submit Ticket'}
+        <button onClick={submit} disabled={!canSubmit} className={(canSubmit ? 'bg-primary hover:bg-primary/95 shadow-lg shadow-primary/20 hover:scale-[1.02]' : 'bg-primary/40 cursor-not-allowed') + ' w-full rounded-xl px-4 py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98] mt-2'}>
+          {loading ? 'Submitting Ticket...' : 'Submit Support Ticket'}
         </button>
       </div>
     </Modal>

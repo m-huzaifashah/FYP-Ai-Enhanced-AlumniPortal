@@ -1,4 +1,4 @@
-export type Route = 'dashboard' | 'services' | 'service' | 'directory' | 'events' | 'jobs' | 'contact' | 'career' | 'mentorship' | 'admin' | 'signup' | 'forgot' | 'profile' | 'settings'
+export type Route = 'dashboard' | 'services' | 'service' | 'directory' | 'events' | 'jobs' | 'contact' | 'career' | 'admin' | 'signup' | 'forgot' | 'profile' | 'settings'
 
 export const ROUTE_TO_PATH: Record<Route, string> = {
   dashboard: '/',
@@ -9,7 +9,6 @@ export const ROUTE_TO_PATH: Record<Route, string> = {
   jobs: '/jobs',
   contact: '/contact',
   career: '/career',
-  mentorship: '/mentorship',
   admin: '/admin',
   signup: '/signup',
   forgot: '/forgot',
@@ -26,7 +25,6 @@ export const NAV_ITEMS: [Route, string][] = [
   ['events','Events'],
   ['jobs','Jobs'],
   ['career','Career Support'],
-  ['mentorship','Mentorship'],
   ['admin','Admin'],
   ['contact','Contact']
 ]

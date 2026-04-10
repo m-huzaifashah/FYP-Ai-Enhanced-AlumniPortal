@@ -7,7 +7,6 @@ import Directory from '../pages/Directory'
 import Events from '../pages/Events'
 import Jobs from '../pages/Jobs'
 import CareerSupport from '../pages/CareerSupport'
-import Mentorship from '../pages/Mentorship'
 import Admin from '../pages/Admin'
 import Contact from '../pages/Contact'
 import Signup from '../pages/Signup'
@@ -113,7 +112,6 @@ export default function AppRoutes({
           
         }
       />
-      <Route path="/mentorship" element={<Mentorship />} />
       <Route path="/admin" element={
         isAdmin ? <Admin events={events} jobs={jobs} alumniCount={alumni.length} onEventsChanged={(next)=>setEvents(next)} dataMode={apiMode} /> : <Navigate to="/" />
       } />
@@ -129,38 +127,31 @@ export default function AppRoutes({
         path="/settings"
         element={
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl bg-white/70 ring-1 ring-slate-200 p-6 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl bg-white/70 ring-1 ring-secondary p-6 shadow-sm backdrop-blur-sm">
               <div className="text-xl font-semibold">Settings</div>
               <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between rounded-xl bg-white ring-1 ring-slate-200 p-3">
+                <div className="flex items-center justify-between rounded-xl bg-white ring-1 ring-secondary p-3">
                   <div>
                     <div className="font-semibold">Email Notifications</div>
-                    <div className="text-xs text-slate-600">Receive updates about events and jobs</div>
-                  </div>
-                  <input type="checkbox" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-white ring-1 ring-slate-200 p-3">
-                  <div>
-                    <div className="font-semibold">Mentorship Invites</div>
-                    <div className="text-xs text-slate-600">Allow mentors to contact you</div>
+                    <div className="text-xs text-primary">Receive updates about events and jobs</div>
                   </div>
                   <input type="checkbox" defaultChecked />
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="rounded-full bg-white ring-1 ring-slate-200 px-4 py-2 text-sm">Back</button>
+                  <button className="rounded-full bg-white ring-1 ring-secondary px-4 py-2 text-sm">Back</button>
                   <button className="rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white px-4 py-2 text-sm font-semibold">Save Changes</button>
                 </div>
               </div>
             </div>
-            <div className="rounded-2xl bg-white/70 ring-1 ring-slate-200 p-6 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl bg-white/70 ring-1 ring-secondary p-6 shadow-sm backdrop-blur-sm">
               <div className="text-xl font-semibold">Theme</div>
               <div className="mt-4 space-y-3">
                 <div className="flex items-center gap-3">
                   <button className="h-10 w-10 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500" />
-                  <button className="h-10 w-10 rounded-lg bg-white ring-1 ring-slate-200" />
-                  <button className="h-10 w-10 rounded-lg bg-slate-900" />
+                  <button className="h-10 w-10 rounded-lg bg-white ring-1 ring-secondary" />
+                  <button className="h-10 w-10 rounded-lg bg-primary" />
                 </div>
-                <div className="text-xs text-slate-600">Theme switching is mocked for demo.</div>
+                <div className="text-xs text-primary">Theme switching is mocked for demo.</div>
               </div>
             </div>
           </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Button, Card, Input, Modal, IconButton, Icon } from '../ui'
 import { getEvents } from '../api'
 
-type Event = { id: number | string; title: string; date: string; location: string; description: string }
+type Event = { id: number | string; title: string; date: string; time?: string; location: string; description: string; image?: string }
 
 export default function Events() {
   const [city, setCity] = useState('')
@@ -62,17 +62,17 @@ export default function Events() {
     <section className="space-y-8">
       <div className="text-center">
         <div className="text-3xl font-bold">Events</div>
-        <div className="mt-2 text-slate-600">Discover upcoming activities and revisit past highlights.</div>
+        <div className="mt-2 text-primary">Discover upcoming activities and revisit past highlights.</div>
       </div>
 
-      {error && <div className="mx-auto max-w-7xl text-sm text-red-700">{error}</div>}
-      {loading && <div className="mx-auto max-w-7xl text-sm text-slate-600">Loading…</div>}
+      {error && <div className="mx-auto max-w-7xl text-sm text-accent">{error}</div>}
+      {loading && <div className="mx-auto max-w-7xl text-sm text-primary">Loading…</div>}
 
       <Card className="p-4">
         <div className="grid gap-3 md:grid-cols-[1fr_160px_160px] items-center">
           <Input value={city} onChange={e=>setCity(e.target.value)} placeholder="Filter by city or venue" />
-          <input type="date" value={start} onChange={e=>setStart(e.target.value)} className="rounded-full bg-white px-3 py-2 text-sm ring-1 ring-slate-200" />
-          <input type="date" value={end} onChange={e=>setEnd(e.target.value)} className="rounded-full bg-white px-3 py-2 text-sm ring-1 ring-slate-200" />
+          <input type="date" value={start} onChange={e=>setStart(e.target.value)} className="rounded-full bg-white px-3 py-2 text-sm ring-1 ring-secondary" />
+          <input type="date" value={end} onChange={e=>setEnd(e.target.value)} className="rounded-full bg-white px-3 py-2 text-sm ring-1 ring-secondary" />
         </div>
       </Card>
 
@@ -83,29 +83,34 @@ export default function Events() {
           </div>
           <ul className="mt-4 space-y-4">
             {upcoming.map(ev => (
-              <li key={ev.id} className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-sm">
+              <li key={ev.id} className="rounded-xl bg-white ring-1 ring-secondary p-4 shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="h-16 w-16 grid place-items-center rounded-xl bg-white/70">
-                    <img src={ICON} alt="Event" className="h-12 w-12 object-contain" onError={(e)=>{(e.currentTarget as HTMLImageElement).src = `https://placehold.co/64x64/EEF2FF/0B4C72?text=${encodeURIComponent(ev.title.split(' ')[0])}`}} />
+                    <img 
+                      src={ev.image || ICON} 
+                      alt="Event" 
+                      className={ev.image ? "h-full w-full object-cover rounded-xl" : "h-12 w-12 object-contain"} 
+                      onError={(e)=>{(e.currentTarget as HTMLImageElement).src = `https://placehold.co/64x64/EEF2FF/0B4C72?text=${encodeURIComponent(ev.title.split(' ')[0])}`}} 
+                    />
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold">{ev.title}</div>
-                    <div className="text-sm text-slate-600">{new Date(ev.date).toLocaleDateString()} • {ev.location}</div>
-                    <div className="mt-2 text-sm text-slate-700 line-clamp-2">{ev.description}</div>
+                    <div className="text-sm text-primary">{new Date(ev.date).toLocaleDateString()} {ev.time && `• ${ev.time}`} • {ev.location}</div>
+                    <div className="mt-2 text-sm text-primary line-clamp-2">{ev.description}</div>
                     <div className="mt-3 flex items-center gap-2">
                       <Button variant="primary" onClick={() => register(ev)}>Register</Button>
                       <Button variant="outline" onClick={() => { setActive(ev); setOpen(true) }}>Details</Button>
                       <IconButton aria-label="Add to Calendar">
                         <Icon name="calendar" />
                       </IconButton>
-                      <div className="ml-auto text-xs text-slate-600">RSVP: {rsvp[ev.id] || 0}</div>
+                      <div className="ml-auto text-xs text-primary">RSVP: {rsvp[ev.id] || 0}</div>
                     </div>
                   </div>
                 </div>
               </li>
             ))}
             {upcoming.length === 0 && (
-              <li className="text-sm text-slate-600">No upcoming events match your filters.</li>
+              <li className="text-sm text-primary">No upcoming events match your filters.</li>
             )}
           </ul>
         </Card>
@@ -114,16 +119,16 @@ export default function Events() {
           <div className="text-xl font-semibold">Past Events</div>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {past.map(ev => (
-              <li key={ev.id} className="rounded-xl overflow-hidden bg-white ring-1 ring-slate-200 shadow-sm">
-                <img src={`https://placehold.co/600x360/FFFFFF/0B4C72?text=${encodeURIComponent(ev.title)}`} alt={ev.title} className="w-full h-32 object-cover" />
+              <li key={ev.id} className="rounded-xl overflow-hidden bg-white ring-1 ring-secondary shadow-sm">
+                <img src={ev.image || `https://placehold.co/600x360/FFFFFF/0B4C72?text=${encodeURIComponent(ev.title)}`} alt={ev.title} className="w-full h-32 object-cover" />
                 <div className="p-3">
                   <div className="text-sm font-semibold">{ev.title}</div>
-                  <div className="text-xs text-slate-600">{new Date(ev.date).toLocaleDateString()} • {ev.location}</div>
+                  <div className="text-xs text-primary">{new Date(ev.date).toLocaleDateString()} {ev.time && `• ${ev.time}`} • {ev.location}</div>
                 </div>
               </li>
             ))}
             {past.length === 0 && (
-              <li className="text-sm text-slate-600">No past events to show.</li>
+              <li className="text-sm text-primary">No past events to show.</li>
             )}
           </ul>
         </Card>
@@ -132,9 +137,9 @@ export default function Events() {
       <Modal open={open && !!active} onClose={() => setOpen(false)} title={active ? active.title : 'Event'}>
         {active && (
           <div className="space-y-3">
-            <div className="text-sm text-slate-300">{new Date(active.date).toLocaleString()}</div>
-            <div className="text-sm text-slate-300">{active.location}</div>
-            <div className="rounded-md bg-white/5 ring-1 ring-slate-800 p-3 text-sm text-slate-100">{active.description}</div>
+            <div className="text-sm text-secondary">{new Date(active.date).toLocaleDateString()} {active.time && `at ${active.time}`}</div>
+            <div className="text-sm text-secondary">{active.location}</div>
+            <div className="rounded-md bg-white/5 ring-1 ring-secondary p-3 text-sm text-secondary">{active.description}</div>
             <div className="flex items-center gap-2">
               <IconButton aria-label="Add to Calendar">
                 <Icon name="calendar" />

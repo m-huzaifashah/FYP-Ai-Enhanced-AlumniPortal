@@ -10,7 +10,7 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
   const [secret, setSecret] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const RIU_LOGO = 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png'
+  const RIU_LOGO = '/logo.png'
 
   const submit = async () => {
     const emailOk = /.+@.+\..+/.test(email)
@@ -38,11 +38,11 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
 
   return (
     <section className="mx-auto max-w-5xl">
-      <div className="relative rounded-2xl border border-slate-800 bg-white text-slate-900 shadow">
+      <div className="relative rounded-2xl border border-secondary bg-white text-primary shadow">
         <button
           aria-label="Close"
           onClick={onBack}
-          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200"
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-primary hover:bg-secondary"
         >
           ✕
         </button>
@@ -54,8 +54,8 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
             </div>
             <div className="mt-6 text-sm" />
             <div className="mt-6 space-y-3">
-              {error && <div className="rounded-md bg-red-100 text-red-700 text-sm px-3 py-2">{error}</div>}
-              {success && <div className="rounded-md bg-green-100 text-green-700 text-sm px-3 py-2">{success}</div>}
+              {error && <div className="rounded-md bg-accent text-accent text-sm px-3 py-2">{error}</div>}
+              {success && <div className="rounded-md bg-secondary text-primary text-sm px-3 py-2">{success}</div>}
 
               <div className="flex gap-2 justify-center pb-2">
                 {(['student', 'alumni'] as const).map(r => (
@@ -65,8 +65,8 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
                     onClick={() => setRole(r)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       role === r 
-                        ? 'bg-[#0B4C72] text-white shadow-md scale-105' 
-                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                        ? 'bg-primary text-white shadow-md scale-105' 
+                        : 'bg-secondary text-primary hover:bg-secondary'
                     }`}
                   >
                     <span className="capitalize">{r}</span>
@@ -74,19 +74,19 @@ export default function Signup({ onOpenLogin, onBack, onOpenForgot }: { onOpenLo
                 ))}
               </div>
 
-              <input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Full Name" />
-              <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="your@email.com" />
-              <input value={password} onChange={e=>setPassword(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Enter Password" type="password" />
-              <input value={confirm} onChange={e=>setConfirm(e.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Confirm Password" type="password" />
+              <input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-md border border-secondary bg-white px-3 py-2 text-sm" placeholder="Full Name" />
+              <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-md border border-secondary bg-white px-3 py-2 text-sm" placeholder="your@email.com" />
+              <input value={password} onChange={e=>setPassword(e.target.value)} className="w-full rounded-md border border-secondary bg-white px-3 py-2 text-sm" placeholder="Enter Password" type="password" />
+              <input value={confirm} onChange={e=>setConfirm(e.target.value)} className="w-full rounded-md border border-secondary bg-white px-3 py-2 text-sm" placeholder="Confirm Password" type="password" />
               
               
 
               <div className="text-right text-sm">
-                <button onClick={onOpenForgot} className="text-[#0B4C72]">Forgot Password ?</button>
+                <button onClick={onOpenForgot} className="text-primary">Forgot Password ?</button>
               </div>
               <div className="mt-2 flex items-center gap-3">
-                <button onClick={onOpenLogin} className="flex-1 rounded-md bg-[#0B4C72] px-4 py-2 text-sm font-medium text-white">Login</button>
-                <button onClick={submit} className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white">Register</button>
+                <button onClick={onOpenLogin} className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white">Login</button>
+                <button onClick={submit} className="flex-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white">Register</button>
               </div>
             </div>
           </div>

@@ -1,6 +1,11 @@
 import Job from '../models/Job.js'
 import { loadJobs } from '../utils/loadjobs.js'
 import { detectRole, buildRoleSkillMap } from '../utils/jobHelpers.js'
+import { uploadToImageKit } from '../utils/imagekit.js'
+
+// Helper: convert multer file buffer → base64 data URL
+// const fileToBase64 = (file) =>
+//   file ? `data:${file.mimetype};base64,${file.buffer.toString('base64')}` : null
 
 export let jobsLocal = []
 export let skillVocabulary = []
@@ -65,8 +70,18 @@ export const createJob = async (req, res) => {
   const { title, company, location, link } = req.body || {}
   const ok = typeof title === 'string' && title.trim() && typeof company === 'string' && typeof location === 'string'
   if (!ok) return res.status(400).json({ error: 'Invalid job' })
+
+  let image = null
+  if (req.file) {
+    try {
+      image = await uploadToImageKit(req.file.buffer, req.file.originalname, 'jobs')
+    } catch (e) {
+      console.error('ImageKit upload failed:', e)
+    }
+  }
+
   try {
-    const job = await Job.create({ title, company, location, link: link || '' })
+    const job = await Job.create({ title, company, location, link: link || '', ...(image && { image }) })
     return res.json({ ...job.toObject(), id: String(job._id) })
   } catch (e) {
     res.status(500).json({ error: 'Failed to create job' })
@@ -76,12 +91,22 @@ export const createJob = async (req, res) => {
 export const updateJob = async (req, res) => {
   const id = req.params.id
   const { title, company, location, link } = req.body || {}
+
+  let image = null
+  if (req.file) {
+    try {
+      image = await uploadToImageKit(req.file.buffer, req.file.originalname, 'jobs')
+    } catch (e) {
+      console.error('ImageKit upload failed:', e)
+    }
+  }
+
   try {
-    const updated = await Job.findByIdAndUpdate(
-        id,
-        { title, company, location, link },
-        { new: true }
-    )
+    const updateDoc = { title, company, location, link }
+    if (image) updateDoc.image = image
+    if (req.body.removeImage === 'true') updateDoc.image = null
+
+    const updated = await Job.findByIdAndUpdate(id, updateDoc, { new: true })
     if (updated) return res.json({ ...updated.toObject(), id: String(updated._id) })
     
     const idx = jobsLocal.findIndex(j => String(j.id) === String(id))

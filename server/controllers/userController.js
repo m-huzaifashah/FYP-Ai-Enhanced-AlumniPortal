@@ -1,7 +1,6 @@
 import User from '../models/User.js'
 import Alumni from '../models/Alumni.js'
 import Student from '../models/Student.js'
-import Mentor from '../models/Mentor.js'
 
 export const getProfile = async (req, res) => {
   const { email } = req.query || {}
@@ -111,22 +110,3 @@ export const getAlumni = async (req, res) => {
   }
 }
 
-export const getMentors = async (req, res) => {
-  try {
-    const items = await Mentor.find({})
-    const mapped = items.map(it => {
-        const obj = it.toObject()
-        const { _id, ...rest } = obj
-        return { ...rest, id: String(_id) }
-    })
-    
-    if (mapped.length) {
-        res.json(mapped)
-    } else {
-        import('../../client/src/data/mentors.js').then(({ MENTORS }) => res.json(MENTORS)).catch(() => res.json([]))
-    }
-  } catch (e) {
-    console.warn('⚠ Mentors DB query failed, using fallback data:', e.message)
-    import('../../client/src/data/mentors.js').then(({ MENTORS }) => res.json(MENTORS)).catch(() => res.json([]))
-  }
-}

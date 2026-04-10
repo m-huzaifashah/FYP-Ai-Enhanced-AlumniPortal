@@ -1,4 +1,5 @@
 import Event from '../models/Event.js'
+import { uploadToImageKit } from '../utils/imagekit.js'
 
 // In-memory fallback
 let eventsLocal = []
@@ -22,12 +23,21 @@ export const getEvents = async (req, res) => {
 }
 
 export const createEvent = async (req, res) => {
-  const { title, date, location, description } = req.body || {}
+  const { title, date, time, location, description } = req.body || {}
   const ok = typeof title === 'string' && title.trim().length > 0 && typeof date === 'string' && typeof location === 'string' && location.trim().length > 0
   if (!ok) return res.status(400).json({ error: 'Invalid event data (title/date/location required)' })
-  
+
+  let image = null
+  if (req.file) {
+    try {
+      image = await uploadToImageKit(req.file.buffer, req.file.originalname, 'events')
+    } catch (e) {
+      console.error('ImageKit upload failed:', e)
+    }
+  }
+
   try {
-    const doc = { title, date, location, description: description || '' }
+    const doc = { title, date, time: time || '', location, description: description || '', ...(image && { image }) }
     const event = await Event.create(doc)
     return res.json({ ...event.toObject(), id: String(event._id) })
   } catch (e) {
@@ -38,13 +48,24 @@ export const createEvent = async (req, res) => {
 
 export const updateEvent = async (req, res) => {
   const id = req.params.id
-  const { title, date, location, description } = req.body || {}
+  const { title, date, time, location, description } = req.body || {}
+
+  let image = null
+  if (req.file) {
+    try {
+      image = await uploadToImageKit(req.file.buffer, req.file.originalname, 'events')
+    } catch (e) {
+      console.error('ImageKit upload failed:', e)
+    }
+  }
+
   try {
-    const updated = await Event.findByIdAndUpdate(
-        id, 
-        { title, date, location, description },
-        { new: true }
-    )
+    const updateDoc = { title, date, time, location, description }
+    // Only overwrite image if a new one was uploaded; if 'removeImage' flag sent, clear it
+    if (image) updateDoc.image = image
+    if (req.body.removeImage === 'true') updateDoc.image = null
+
+    const updated = await Event.findByIdAndUpdate(id, updateDoc, { new: true })
     if (!updated) return res.status(404).json({ error: 'Not found' })
     const { _id, ...rest } = updated.toObject()
     return res.json({ ...rest, id: String(_id) })

@@ -11,6 +11,7 @@ import { useInitialData } from './hooks/useInitialData'
 import { useFilterAlumni, useFilterServices } from './utils/filter'
 import { getIsAdmin, initAuthed, signOut } from './utils/auth'
 import { ROUTE_TO_PATH, PATH_TO_ROUTE, NAV_ITEMS } from './constants/routes'
+import { LoadingScreen } from './ui'
 import type { Route as AppRoute } from './constants/routes'
 
 import type { Service } from './hooks/useInitialData'
@@ -44,10 +45,17 @@ export default function App() {
   const { services, alumni, jobs, events, apiMode, setEvents, refreshAlumni } = useInitialData()
   const navigate = useNavigate()
   const location = useLocation()
+  const [isNavigating, setIsNavigating] = useState(false)
   const currentRoute: Route = PATH_TO_ROUTE[location.pathname] ?? 'dashboard'
   const isAdmin = getIsAdmin(authed)
 
   React.useEffect(() => { initAuthed(setAuthed, setRole) }, [])
+
+  React.useEffect(() => {
+    setIsNavigating(true)
+    const t = setTimeout(() => setIsNavigating(false), 700)
+    return () => clearTimeout(t)
+  }, [location.pathname])
 
   const setRoute = (r: Route) => {
     const p = ROUTE_TO_PATH[r]
@@ -78,7 +86,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-slate-800">
+    <div className="min-h-screen bg-gradient-to-b from-[#F0F6FF] via-[#E8F4FF] to-white text-primary">
       <Navbar 
         authed={authed}
         isAdmin={isAdmin}
@@ -89,30 +97,34 @@ export default function App() {
       />
 
       <div className="mx-auto max-w-7xl">
-        <main className="px-4 py-8">
-          <AppRoutes
-            isAdmin={isAdmin}
-            role={role}
-            alumni={alumni as any}
-            filtered={filtered as any}
-            jobs={jobs as any}
-            events={events as any}
-            apiMode={apiMode as any}
-            servicesFiltered={servicesFiltered as any}
-            svcDetail={svcDetail as any}
-            svcQuery={svcQuery}
-            svcCategory={svcCategory}
-            onSvcQueryChange={setSvcQuery}
-            onSvcCategoryChange={setSvcCategory}
-            dirQuery={query}
-            onDirQueryChange={setQuery}
-            setRoute={setRoute as any}
-            setEvents={setEvents as any}
-            setContactOpen={setContactOpen}
-            setLoginOpen={setLoginOpen}
-            openService={openService}
-            onProfileUpdate={refreshAlumni}
-          />
+        <main className="px-4 py-8 relative min-h-[60vh]">
+          {isNavigating ? (
+            <LoadingScreen />
+          ) : (
+            <AppRoutes
+              isAdmin={isAdmin}
+              role={role}
+              alumni={alumni as any}
+              filtered={filtered as any}
+              jobs={jobs as any}
+              events={events as any}
+              apiMode={apiMode as any}
+              servicesFiltered={servicesFiltered as any}
+              svcDetail={svcDetail as any}
+              svcQuery={svcQuery}
+              svcCategory={svcCategory}
+              onSvcQueryChange={setSvcQuery}
+              onSvcCategoryChange={setSvcCategory}
+              dirQuery={query}
+              onDirQueryChange={setQuery}
+              setRoute={setRoute as any}
+              setEvents={setEvents as any}
+              setContactOpen={setContactOpen}
+              setLoginOpen={setLoginOpen}
+              openService={openService}
+              onProfileUpdate={refreshAlumni}
+            />
+          )}
         </main>
       </div>
 

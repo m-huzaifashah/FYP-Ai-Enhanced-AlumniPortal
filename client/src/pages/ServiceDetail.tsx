@@ -19,7 +19,7 @@ export default function ServiceDetail({ service, onBack, onOpenLogin }: { servic
   }
   return (
     <section className="space-y-6">
-      <div className="rounded-2xl overflow-hidden bg-white/5 ring-1 ring-slate-800">
+      <div className="rounded-2xl overflow-hidden bg-white/5 ring-1 ring-secondary">
         <img
           src={SERVICE_IMAGES[service.id] || SERVICE_IMAGES.login}
           alt={service.title}
@@ -28,11 +28,11 @@ export default function ServiceDetail({ service, onBack, onOpenLogin }: { servic
         />
         <div className="p-6">
           <div className="text-2xl font-bold text-white">{service.title}</div>
-          <p className="mt-2 text-slate-300">{service.description}</p>
+          <p className="mt-2 text-secondary">{service.description}</p>
           <div className="mt-4 flex items-center gap-2">
-            <button onClick={onBack} className="rounded-md bg-slate-800 px-3 py-2 text-sm">Back to Services</button>
+            <button onClick={onBack} className="rounded-md bg-primary px-3 py-2 text-sm">Back to Services</button>
             {service.id==='login' && (
-              <button onClick={onOpenLogin} className="rounded-md bg-[#D29B2A] px-3 py-2 text-sm text-slate-900 font-medium">Open Login</button>
+              <button onClick={onOpenLogin} className="rounded-md bg-[#D29B2A] px-3 py-2 text-sm text-primary font-medium">Open Login</button>
             )}
           </div>
         </div>

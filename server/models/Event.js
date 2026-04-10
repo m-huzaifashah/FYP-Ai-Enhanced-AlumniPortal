@@ -9,12 +9,18 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  time: {
+    type: String
+  },
   location: {
     type: String,
     required: true
   },
   description: {
     type: String
+  },
+  image: {
+    type: String  // base64 data URL
   }
 }, { timestamps: true, strict: false })
 

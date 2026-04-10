@@ -58,7 +58,6 @@ export const postSignup = (payload: { name: string, email: string, password: str
 // ===============================
 export const getEvents = () => get('/events').catch(errorInterceptor('Failed to load events'))
 export const getJobs = () => get('/jobs', { source: 'db' }).catch(errorInterceptor('Failed to load jobs'))
-export const getMentors = () => get('/mentors').catch(errorInterceptor('Failed to load mentors'))
 export const getAlumni = () => get('/alumni').catch(errorInterceptor('Failed to load alumni'))
 export const getServices = () => get('/services').catch(errorInterceptor('Failed to load services'))
 export const getHealth = () => get('/health').catch(errorInterceptor('Failed to load health'))
@@ -72,11 +71,28 @@ export const updateProfile = (profile: any) => put('/profile', profile).catch(er
 // ===============================
 // EVENTS (ADMIN)
 // ===============================
-export const createEvent = (payload: { title: string, date: string, location: string, description?: string }) =>
-  post('/events', payload).catch(errorInterceptor('Failed to create event'))
+export const createEvent = (payload: { title: string, date: string, time?: string, location: string, description?: string, image?: File | null }) => {
+  const fd = new FormData()
+  fd.append('title', payload.title)
+  fd.append('date', payload.date)
+  if (payload.time) fd.append('time', payload.time)
+  fd.append('location', payload.location)
+  if (payload.description) fd.append('description', payload.description)
+  if (payload.image) fd.append('image', payload.image)
+  return post('/events', fd).catch(errorInterceptor('Failed to create event'))
+}
 
-export const updateEvent = (id: string | number, payload: { title: string, date: string, location: string, description?: string }) =>
-  put(`/events/${id}`, payload).catch(errorInterceptor('Failed to update event'))
+export const updateEvent = (id: string | number, payload: { title: string, date: string, time?: string, location: string, description?: string, image?: File | null, removeImage?: boolean }) => {
+  const fd = new FormData()
+  fd.append('title', payload.title)
+  fd.append('date', payload.date)
+  if (payload.time) fd.append('time', payload.time)
+  fd.append('location', payload.location)
+  if (payload.description) fd.append('description', payload.description)
+  if (payload.image) fd.append('image', payload.image)
+  if (payload.removeImage) fd.append('removeImage', 'true')
+  return put(`/events/${id}`, fd).catch(errorInterceptor('Failed to update event'))
+}
 
 export const deleteEvent = (id: string | number) =>
   del(`/events/${id}`).catch(errorInterceptor('Failed to delete event'))
@@ -84,11 +100,26 @@ export const deleteEvent = (id: string | number) =>
 // ===============================
 // JOBS (ADMIN)
 // ===============================
-export const createJob = (payload: { title: string, company: string, location: string, link?: string }) =>
-  post('/jobs', payload).catch(errorInterceptor('Failed to create job'))
+export const createJob = (payload: { title: string, company: string, location: string, link?: string, image?: File | null }) => {
+  const fd = new FormData()
+  fd.append('title', payload.title)
+  fd.append('company', payload.company)
+  fd.append('location', payload.location)
+  if (payload.link) fd.append('link', payload.link)
+  if (payload.image) fd.append('image', payload.image)
+  return post('/jobs', fd).catch(errorInterceptor('Failed to create job'))
+}
 
-export const updateJob = (id: string | number, payload: { title: string, company: string, location: string, link?: string }) =>
-  put(`/jobs/${id}`, payload).catch(errorInterceptor('Failed to update job'))
+export const updateJob = (id: string | number, payload: { title: string, company: string, location: string, link?: string, image?: File | null, removeImage?: boolean }) => {
+  const fd = new FormData()
+  fd.append('title', payload.title)
+  fd.append('company', payload.company)
+  fd.append('location', payload.location)
+  if (payload.link) fd.append('link', payload.link)
+  if (payload.image) fd.append('image', payload.image)
+  if (payload.removeImage) fd.append('removeImage', 'true')
+  return put(`/jobs/${id}`, fd).catch(errorInterceptor('Failed to update job'))
+}
 
 export const deleteJob = (id: string | number) =>
   del(`/jobs/${id}`).catch(errorInterceptor('Failed to delete job'))

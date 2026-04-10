@@ -25,13 +25,19 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
     }
   }
   return (
-    <Modal open={open} onClose={onClose} title="Send a Message">
-      <div className="space-y-3">
-        {status && <div className={(status==='Sent' ? 'bg-green-900/40 text-green-200' : 'bg-red-900/40 text-red-200') + ' rounded-md text-sm px-3 py-2'}>{status}</div>}
-        <input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm" placeholder="Name" />
-        <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm" placeholder="Email" />
-        <textarea value={message} onChange={e=>setMessage(e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm" placeholder="Message" rows={4} />
-        <button onClick={send} disabled={!canSend} className={(canSend ? '' : 'opacity-60 cursor-not-allowed') + ' w-full rounded-md bg-[#1669bb] px-4 py-2 text-sm font-medium hover:bg-[#125a9e] transition-colors'}>{loading ? 'Sending…' : 'Send'}</button>
+    <Modal open={open} onClose={onClose} title="Send a Message" titleClassName="text-center w-full">
+      <div className="space-y-4 pt-2">
+        <p className="text-center text-sm text-white/60 -mt-3 mb-2">Have a question? We'd love to hear from you.</p>
+        
+        {status && <div className={(status==='Sent' ? 'bg-secondary/10 text-primary' : 'bg-accent/10 text-accent') + ' rounded-lg text-sm px-4 py-3 border border-white/5'}>{status}</div>}
+        
+        <div className="space-y-3">
+          <input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-xl border border-secondary bg-white px-4 py-3 text-sm text-primary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" placeholder="Full Name" />
+          <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-xl border border-secondary bg-white px-4 py-3 text-sm text-primary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" placeholder="Email Address" />
+          <textarea value={message} onChange={e=>setMessage(e.target.value)} className="w-full rounded-xl border border-secondary bg-white px-4 py-3 text-sm text-primary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" placeholder="Your Message..." rows={4} />
+        </div>
+
+        <button onClick={send} disabled={!canSend} className={(canSend ? 'bg-primary hover:bg-primary/95 shadow-lg shadow-primary/10 hover:scale-[1.02]' : 'bg-primary/40 cursor-not-allowed') + ' w-full rounded-xl px-4 py-3.5 text-sm font-bold text-white transition-all active:scale-[0.98]'}>{loading ? 'Sending Message…' : 'Send Message'}</button>
       </div>
     </Modal>
   )

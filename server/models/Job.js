@@ -18,6 +18,9 @@ const jobSchema = new mongoose.Schema({
   },
   link: {
     type: String
+  },
+  image: {
+    type: String  // base64 data URL
   }
 }, { timestamps: true, strict: false })
 

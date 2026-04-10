@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react'
 import { Button, Card, Counter, Input, Modal } from '../ui'
 import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob, getTickets, updateTicketStatus, createAdminAccount } from '../api'
 
-type Event = { id: number | string; title: string; date: string; location: string; description: string }
-type Job = { id: number | string; title: string; company: string; location: string; link: string }
+type Event = { id: number | string; title: string; date: string; time?: string; location: string; description: string; image?: string }
+type Job = { id: number | string; title: string; company: string; location: string; link: string; image?: string }
 
 export default function Admin({ events, jobs, alumniCount, onEventsChanged, dataMode }: { events: Event[]; jobs: Job[]; alumniCount: number; onEventsChanged?: (next: Event[]) => void; dataMode?: 'db' | 'memory' }) {
   const [admOpen, setAdmOpen] = useState(false)
@@ -42,11 +42,25 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
   const [editId, setEditId] = useState<number | string | null>(null)
   const [evTitle, setEvTitle] = useState('')
   const [evDate, setEvDate] = useState('')
+  const [evTime, setEvTime] = useState('')
   const [evLocation, setEvLocation] = useState('')
   const [evDesc, setEvDesc] = useState('')
+  const [evImage, setEvImage] = useState<File | null>(null)
+  const [evImagePreview, setEvImagePreview] = useState<string>('')
+  const [evRemoveImage, setEvRemoveImage] = useState(false)
   const [evError, setEvError] = useState('')
   const [evSaving, setEvSaving] = useState(false)
   const [evQuery, setEvQuery] = useState('')
+
+  const [jobOpen, setJobOpen] = useState(false)
+  const [jobEditId, setJobEditId] = useState<number | string | null>(null)
+  const [jobTitle, setJobTitle] = useState('')
+  const [jobCompany, setJobCompany] = useState('')
+  const [jobLocation, setJobLocation] = useState('')
+  const [jobLink, setJobLink] = useState('')
+  const [jobImage, setJobImage] = useState<File | null>(null)
+  const [jobImagePreview, setJobImagePreview] = useState<string>('')
+  const [jobRemoveImage, setJobRemoveImage] = useState(false)
 
   const [annTitle, setAnnTitle] = useState('')
   const [annBody, setAnnBody] = useState('')
@@ -108,8 +122,12 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     setEditId(null)
     setEvTitle('')
     setEvDate('')
+    setEvTime('')
     setEvLocation('')
     setEvDesc('')
+    setEvImage(null)
+    setEvImagePreview('')
+    setEvRemoveImage(false)
     setEvOpen(true)
   }
 
@@ -117,8 +135,12 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     setEditId(e.id)
     setEvTitle(e.title)
     setEvDate(e.date)
+    setEvTime(e.time || '')
     setEvLocation(e.location)
     setEvDesc(e.description)
+    setEvImage(null)
+    setEvImagePreview(e.image || '')
+    setEvRemoveImage(false)
     setEvOpen(true)
   }
 
@@ -131,13 +153,13 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     setEvSaving(true)
     try {
       if (editId == null) {
-        const created = await createEvent({ title: evTitle.trim(), date: dateNorm, location: evLocation.trim(), description: evDesc.trim() })
+        const created = await createEvent({ title: evTitle.trim(), date: dateNorm, time: evTime, location: evLocation.trim(), description: evDesc.trim(), image: evImage })
         const next = [...evs, created]
         setEvs(next)
         onEventsChanged && onEventsChanged(next)
         try { window.dispatchEvent(new CustomEvent('eventsUpdated')) } catch {}
       } else {
-        const updated = await updateEvent(editId, { title: evTitle.trim(), date: dateNorm, location: evLocation.trim(), description: evDesc.trim() })
+        const updated = await updateEvent(editId, { title: evTitle.trim(), date: dateNorm, time: evTime, location: evLocation.trim(), description: evDesc.trim(), image: evImage, removeImage: evRemoveImage })
         const next = evs.map(x => String(x.id) === String(editId) ? updated : x)
         setEvs(next)
         onEventsChanged && onEventsChanged(next)
@@ -159,19 +181,15 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     try { window.dispatchEvent(new CustomEvent('eventsUpdated')) } catch {}
   }
 
-  const [jobOpen, setJobOpen] = useState(false)
-  const [jobEditId, setJobEditId] = useState<number | string | null>(null)
-  const [jobTitle, setJobTitle] = useState('')
-  const [jobCompany, setJobCompany] = useState('')
-  const [jobLocation, setJobLocation] = useState('')
-  const [jobLink, setJobLink] = useState('')
-
   const openJobCreate = () => {
     setJobEditId(null)
     setJobTitle('')
     setJobCompany('')
     setJobLocation('')
     setJobLink('')
+    setJobImage(null)
+    setJobImagePreview('')
+    setJobRemoveImage(false)
     setJobOpen(true)
   }
 
@@ -181,6 +199,9 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     setJobCompany(j.company)
     setJobLocation(j.location)
     setJobLink(j.link)
+    setJobImage(null)
+    setJobImagePreview(j.image || '')
+    setJobRemoveImage(false)
     setJobOpen(true)
   }
 
@@ -189,10 +210,10 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     if (!ok) return
     try {
       if (jobEditId == null) {
-        const created = await createJob({ title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim() })
+        const created = await createJob({ title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim(), image: jobImage })
         setJobsState(prev => [...prev, created])
       } else {
-        const updated = await updateJob(jobEditId, { title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim() })
+        const updated = await updateJob(jobEditId, { title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim(), image: jobImage, removeImage: jobRemoveImage })
         setJobsState(prev => prev.map(x => String(x.id) === String(jobEditId) ? updated : x))
       }
     } catch {}
@@ -231,30 +252,30 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
       <div className="text-2xl font-bold flex items-center gap-3">
         <span>Admin Dashboard</span>
         {dataMode && (
-          <span className={"text-xs rounded-full px-2 py-1 " + (dataMode === 'db' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800')}>{dataMode === 'db' ? 'Database' : 'In-Memory'}</span>
+          <span className={"text-xs rounded-full px-2 py-1 " + (dataMode === 'db' ? 'bg-secondary text-primary' : 'bg-yellow-100 text-yellow-800')}>{dataMode === 'db' ? 'Database' : 'In-Memory'}</span>
         )}
         <Button variant="primary" className="ml-auto text-sm py-1.5 px-3" onClick={() => setAdmOpen(true)}>+ Add Admin</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="p-4">
-          <div className="text-sm text-slate-600">Active Alumni</div>
-          <div className="mt-1 text-3xl font-bold text-slate-900"><Counter to={alumniCount} /></div>
+          <div className="text-sm text-primary">Active Alumni</div>
+          <div className="mt-1 text-3xl font-bold text-primary"><Counter to={alumniCount} /></div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-slate-600">Upcoming Events</div>
-          <div className="mt-1 text-3xl font-bold text-slate-900"><Counter to={upcomingCount} /></div>
+          <div className="text-sm text-primary">Upcoming Events</div>
+          <div className="mt-1 text-3xl font-bold text-primary"><Counter to={upcomingCount} /></div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-slate-600">Open Jobs</div>
-          <div className="mt-1 text-3xl font-bold text-slate-900"><Counter to={jobsCount} /></div>
+          <div className="text-sm text-primary">Open Jobs</div>
+          <div className="mt-1 text-3xl font-bold text-primary"><Counter to={jobsCount} /></div>
         </Card>
       </div>
 
-      <div className="text-xs text-slate-600">Data Source: {dataMode === 'db' ? 'Database' : 'In-Memory (dev)'}
+      <div className="text-xs text-primary">Data Source: {dataMode === 'db' ? 'Database' : 'In-Memory (dev)'}
       </div>
 
-      <div className="rounded-2xl bg-white/70 ring-1 ring-slate-200 p-2 shadow-sm backdrop-blur-sm">
+      <div className="rounded-2xl bg-white/70 ring-1 ring-secondary p-2 shadow-sm backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <Button variant={tab==='events'?'primary':'outline'} onClick={() => setTab('events')}>Events</Button>
           <Button variant={tab==='jobs'?'primary':'outline'} onClick={() => setTab('jobs')}>Jobs</Button>
@@ -278,12 +299,15 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
           </div>
           <ul className="mt-4 space-y-3">
             {evsFiltered.map(e => (
-              <li key={e.id} className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-sm">
+              <li key={e.id} className="rounded-xl bg-white ring-1 ring-secondary p-4 shadow-sm">
                 <div className="flex items-start gap-3">
+                  {e.image && (
+                    <img src={e.image} alt={e.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                  )}
                   <div className="flex-1">
                     <div className="font-semibold">{e.title}</div>
-                    <div className="text-sm text-slate-600">{new Date(e.date).toLocaleDateString()} • {e.location}</div>
-                    <div className="text-xs text-slate-500 line-clamp-2">{e.description}</div>
+                    <div className="text-sm text-primary">{new Date(e.date).toLocaleDateString()} {e.time && `• ${e.time}`} • {e.location}</div>
+                    <div className="text-xs text-primary line-clamp-2">{e.description}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" onClick={() => openEdit(e)}>Edit</Button>
@@ -293,7 +317,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
               </li>
             ))}
             {evsFiltered.length === 0 && (
-              <li className="text-sm text-slate-600">No events match your search.</li>
+              <li className="text-sm text-primary">No events match your search.</li>
             )}
           </ul>
         </Card>
@@ -314,12 +338,15 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
           </div>
           <ul className="mt-4 space-y-3">
             {jobsFiltered.map(j => (
-              <li key={j.id} className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-sm">
+              <li key={j.id} className="rounded-xl bg-white ring-1 ring-secondary p-4 shadow-sm">
                 <div className="flex items-start gap-3">
+                  {j.image && (
+                    <img src={j.image} alt={j.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                  )}
                   <div className="flex-1">
                     <div className="font-semibold">{j.title}</div>
-                    <div className="text-sm text-slate-600">{j.company} • {j.location}</div>
-                    <div className="text-xs text-slate-500 line-clamp-2">{j.link}</div>
+                    <div className="text-sm text-primary">{j.company} • {j.location}</div>
+                    <div className="text-xs text-primary line-clamp-2">{j.link}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" onClick={() => openJobEdit(j)}>Edit</Button>
@@ -329,7 +356,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
               </li>
             ))}
             {jobsFiltered.length === 0 && (
-              <li className="text-sm text-slate-600">No jobs match your search.</li>
+              <li className="text-sm text-primary">No jobs match your search.</li>
             )}
           </ul>
         </Card>
@@ -340,14 +367,14 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
           <div className="text-xl font-semibold">Announcement Composer</div>
           <div className="mt-4 space-y-3">
             <Input value={annTitle} onChange={e=>setAnnTitle(e.target.value)} placeholder="Subject" />
-            <textarea value={annBody} onChange={e=>setAnnBody(e.target.value)} rows={5} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-slate-900 ring-1 ring-slate-200 shadow-sm" placeholder="Write announcement" />
+            <textarea value={annBody} onChange={e=>setAnnBody(e.target.value)} rows={5} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary shadow-sm" placeholder="Write announcement" />
             <div className="flex items-center gap-2">
               <Button variant="primary" onClick={() => {
                 const ok = annTitle.trim().length >= 2 && annBody.trim().length >= 10
                 setAnnStatus(ok ? 'Announcement published' : 'Fill subject and message')
                 if (ok) { setAnnTitle(''); setAnnBody('') }
               }}>Publish</Button>
-              {annStatus && <div className={(annStatus.includes('published') ? 'text-green-700' : 'text-red-700') + ' text-sm'}>{annStatus}</div>}
+              {annStatus && <div className={(annStatus.includes('published') ? 'text-primary' : 'text-accent') + ' text-sm'}>{annStatus}</div>}
             </div>
           </div>
         </Card>
@@ -357,12 +384,12 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
         <Card className="p-6">
           <div className="text-xl font-semibold">Support Tickets</div>
           {reportsLoading ? (
-            <div className="mt-4 text-sm text-slate-500">Loading tickets...</div>
+            <div className="mt-4 text-sm text-primary">Loading tickets...</div>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="text-left text-slate-600">
+                  <tr className="text-left text-primary">
                     <th className="px-3 py-2">User</th>
                     <th className="px-3 py-2">Summary</th>
                     <th className="px-3 py-2">Type</th>
@@ -373,19 +400,19 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
                 </thead>
                 <tbody>
                   {reports.length === 0 && (
-                    <tr><td colSpan={6} className="px-3 py-4 text-center text-slate-500">No tickets found.</td></tr>
+                    <tr><td colSpan={6} className="px-3 py-4 text-center text-primary">No tickets found.</td></tr>
                   )}
                   {reports.map(r => (
-                    <tr key={r._id} className="border-t border-slate-200">
+                    <tr key={r._id} className="border-t border-secondary">
                       <td className="px-3 py-2">
                         <div className="font-medium">{r.createdBy?.name || 'Local User'}</div>
-                        <div className="text-xs text-slate-500">{r.createdBy?.email}</div>
+                        <div className="text-xs text-primary">{r.createdBy?.email}</div>
                       </td>
                       <td className="px-3 py-2 font-medium">{r.title}</td>
                       <td className="px-3 py-2">{r.type}</td>
                       <td className="px-3 py-2">{new Date(r.createdAt).toLocaleDateString()}</td>
                       <td className="px-3 py-2">
-                        <span className={"px-2 py-1 rounded-full text-xs font-medium " + (r.status === 'Resolved' ? 'bg-green-100 text-green-700' : r.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')}>
+                        <span className={"px-2 py-1 rounded-full text-xs font-medium " + (r.status === 'Resolved' ? 'bg-secondary text-primary' : r.status === 'Rejected' ? 'bg-accent text-accent' : 'bg-yellow-100 text-yellow-700')}>
                           {r.status}
                         </span>
                       </td>
@@ -393,7 +420,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
                         {r.status === 'Open' && (
                           <>
                             <Button variant="outline" onClick={() => handleUpdateTicket(r._id, 'Resolved')}>Resolve</Button>
-                            <Button variant="outline" className="text-red-600 hover:ring-red-600" onClick={() => handleUpdateTicket(r._id, 'Rejected')}>Reject</Button>
+                            <Button variant="outline" className="text-accent hover:ring-red-600" onClick={() => handleUpdateTicket(r._id, 'Rejected')}>Reject</Button>
                           </>
                         )}
                       </td>
@@ -406,86 +433,177 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
         </Card>
       )}
 
-      <Modal open={evOpen} onClose={() => setEvOpen(false)} title={editId == null ? 'Add Event' : 'Edit Event'} titleClassName="text-white text-xl">
-        <div className="space-y-5 pt-3">
-          {evError && <div className="rounded-md bg-red-500/20 text-red-200 px-4 py-3 text-sm font-medium border border-red-500/30">{evError}</div>}
+      <Modal open={evOpen} onClose={() => setEvOpen(false)} title={editId == null ? 'Post New Event' : 'Edit Event'} titleClassName="w-full text-center">
+        <div className="space-y-4 pt-2">
+          <p className="text-center text-sm text-white/60 -mt-2 mb-1">Fill in the details for the alumni event</p>
+          {evError && <div className="rounded-md bg-accent/20 text-accent px-4 py-3 text-sm font-medium border border-red-500/30">{evError}</div>}
           
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Event Title</label>
-            <Input value={evTitle} onChange={e=>setEvTitle(e.target.value)} placeholder="e.g. Annual Alumni Meetup 2025" className="w-full" />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Date</label>
-              <input type="date" value={evDate} onChange={e=>setEvDate(e.target.value)} className="w-full rounded-full bg-white px-4 py-2 text-sm text-slate-900 placeholder-slate-500 ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm transition-shadow" />
+              <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Event Title</label>
+              <Input value={evTitle} onChange={e=>setEvTitle(e.target.value)} placeholder="e.g. Annual Alumni Meetup 2025" className="w-full !rounded-xl" />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Location</label>
-              <Input value={evLocation} onChange={e=>setEvLocation(e.target.value)} placeholder="e.g. Main Auditorium" className="w-full" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Date</label>
+                <input type="date" value={evDate} onChange={e=>setEvDate(e.target.value)} className="w-full rounded-xl bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Time</label>
+                <Input value={evTime} onChange={e=>setEvTime(e.target.value)} placeholder="e.g. 10:00 AM" className="w-full !rounded-xl" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Location</label>
+                <Input value={evLocation} onChange={e=>setEvLocation(e.target.value)} placeholder="e.g. Main Auditorium" className="w-full !rounded-xl" />
+              </div>
             </div>
           </div>
 
           <div>
-             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Description</label>
-             <textarea value={evDesc} onChange={e=>setEvDesc(e.target.value)} rows={4} className="w-full rounded-2xl bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-500 ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm transition-shadow" placeholder="Share details about the event..." />
+             <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Description</label>
+             <textarea value={evDesc} onChange={e=>setEvDesc(e.target.value)} rows={4} className="w-full rounded-xl bg-white px-4 py-3 text-sm text-primary placeholder-slate-400 ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" placeholder="Share details about the event..." />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-            <Button variant="outlineWhite" className="!ring-1 !ring-slate-600 !text-slate-300 hover:!bg-slate-800 hover:!text-white" onClick={() => setEvOpen(false)}>Cancel</Button>
-            <Button variant="primary" onClick={saveEvent} disabled={evSaving}>{evSaving ? 'Saving…' : 'Save Event'}</Button>
+          <div>
+            <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Cover Image</label>
+            {(evImagePreview && !evRemoveImage) ? (
+              <div className="relative mt-2">
+                <img src={evImagePreview} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-white/10 shadow-sm" />
+                <button
+                  type="button"
+                  onClick={() => { setEvImagePreview(''); setEvImage(null); setEvRemoveImage(true) }}
+                  className="absolute top-3 right-3 bg-black/70 hover:bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full transition-all hover:scale-105"
+                >✕ REMOVE</button>
+              </div>
+            ) : (
+              <label className="mt-2 flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-white/10 hover:border-white/30 hover:bg-white/[0.02] cursor-pointer transition-all group">
+                <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
+                  <span className="text-3xl mb-2">🖼️</span>
+                  <span className="text-sm font-semibold text-white/60">Drop image here or click to upload</span>
+                  <span className="text-[10px] text-white/40 mt-1 uppercase tracking-tighter">PNG, JPG or WebP</span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0]
+                    if (!f) return
+                    setEvImage(f)
+                    setEvRemoveImage(false)
+                    const reader = new FileReader()
+                    reader.onload = ev => setEvImagePreview(ev.target?.result as string)
+                    reader.readAsDataURL(f)
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+            <button onClick={() => setEvOpen(false)} className="px-4 py-2 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors">Cancel</button>
+            <Button variant="primary" onClick={saveEvent} disabled={evSaving} className="px-6 py-2 !rounded-xl shadow-lg shadow-white/5">
+              {evSaving ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                  Saving...
+                </span>
+              ) : 'Save Event'}
+            </Button>
           </div>
         </div>
       </Modal>
-
-      <Modal open={jobOpen} onClose={() => setJobOpen(false)} title={jobEditId == null ? 'Add Job' : 'Edit Job'} titleClassName="text-white text-xl">
-        <div className="space-y-5 pt-3">
-          <div>
-             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Job Title</label>
-             <Input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="e.g. Senior Software Engineer" className="w-full" />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <Modal open={jobOpen} onClose={() => setJobOpen(false)} title={jobEditId == null ? 'Post New Job' : 'Edit Job'} titleClassName="w-full text-center">
+        <div className="space-y-4 pt-2">
+          <p className="text-center text-sm text-white/60 -mt-2 mb-1">Share a career opportunity</p>
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Company</label>
-              <Input value={jobCompany} onChange={e=>setJobCompany(e.target.value)} placeholder="e.g. Google" className="w-full" />
+               <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Job Title</label>
+               <Input value={jobTitle} onChange={e=>setJobTitle(e.target.value)} placeholder="e.g. Senior Software Engineer" className="w-full !rounded-xl" />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Company</label>
+                <Input value={jobCompany} onChange={e=>setJobCompany(e.target.value)} placeholder="e.g. Google" className="w-full !rounded-xl" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Location</label>
+                <Input value={jobLocation} onChange={e=>setJobLocation(e.target.value)} placeholder="e.g. Remote / Islamabad" className="w-full !rounded-xl" />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Location</label>
-              <Input value={jobLocation} onChange={e=>setJobLocation(e.target.value)} placeholder="e.g. Remote / New York" className="w-full" />
+               <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Application URL</label>
+               <Input value={jobLink} onChange={e=>setJobLink(e.target.value)} placeholder="https://careers.company.com/..." className="w-full !rounded-xl" />
             </div>
           </div>
 
           <div>
-             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Application Link</label>
-             <Input value={jobLink} onChange={e=>setJobLink(e.target.value)} placeholder="https://careers.company.com/..." className="w-full" />
+            <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Company Logo <span className="text-white/40 normal-case font-normal">(max 5MB)</span></label>
+            {(jobImagePreview && !jobRemoveImage) ? (
+              <div className="relative mt-2">
+                <img src={jobImagePreview} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-white/10 shadow-sm" />
+                <button
+                  type="button"
+                  onClick={() => { setJobImagePreview(''); setJobImage(null); setJobRemoveImage(true) }}
+                  className="absolute top-3 right-3 bg-black/70 hover:bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full transition-all hover:scale-105"
+                >✕ REMOVE</button>
+              </div>
+            ) : (
+              <label className="mt-2 flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-white/10 hover:border-white/30 hover:bg-white/[0.02] cursor-pointer transition-all group">
+                <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
+                  <span className="text-3xl mb-2">🏢</span>
+                  <span className="text-sm font-semibold text-white/60">Drop logo here or click to upload</span>
+                  <span className="text-[10px] text-white/40 mt-1 uppercase tracking-tighter">PNG, JPG or WebP</span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0]
+                    if (!f) return
+                    setJobImage(f)
+                    setJobRemoveImage(false)
+                    const reader = new FileReader()
+                    reader.onload = ev => setJobImagePreview(ev.target?.result as string)
+                    reader.readAsDataURL(f)
+                  }}
+                />
+              </label>
+            )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-            <Button variant="outlineWhite" className="!ring-1 !ring-slate-600 !text-slate-300 hover:!bg-slate-800 hover:!text-white" onClick={() => setJobOpen(false)}>Cancel</Button>
-            <Button variant="primary" onClick={saveJob}>Save Job</Button>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+            <button onClick={() => setJobOpen(false)} className="px-4 py-2 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors">Cancel</button>
+            <Button variant="primary" onClick={saveJob} className="px-6 py-2 !rounded-xl shadow-lg shadow-white/5">Save Job</Button>
           </div>
         </div>
       </Modal>
-    <Modal open={admOpen} onClose={() => setAdmOpen(false)} title="Create Admin Account" titleClassName="text-white text-xl">
-        <div className="space-y-4 pt-4">
-          {admStatus && <div className={(admStatus.includes('Success') ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200') + ' border px-3 py-2 rounded-md text-sm'}>{admStatus}</div>}
+    <Modal open={admOpen} onClose={() => setAdmOpen(false)} title="Add Administrator" titleClassName="w-full text-center">
+        <div className="space-y-5 pt-4">
+          <p className="text-center text-sm text-white/60 -mt-4 mb-2">Create a new administrative user for the portal</p>
+          {admStatus && <div className={(admStatus.includes('Success') ? 'bg-secondary text-primary border-green-200' : 'bg-accent text-accent border-red-200') + ' border px-3 py-2 rounded-md text-sm'}>{admStatus}</div>}
           
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Full Name</label>
-            <Input value={admName} onChange={e => setAdmName(e.target.value)} placeholder="Admin Name" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Email Address</label>
-            <Input value={admEmail} onChange={e => setAdmEmail(e.target.value)} placeholder="admin@example.com" type="email" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5 ml-1">Password</label>
-            <Input value={admPass} onChange={e => setAdmPass(e.target.value)} placeholder="Top secret password" type="password" />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+              <Input value={admName} onChange={e => setAdmName(e.target.value)} placeholder="Admin Name" className="w-full !rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
+              <Input value={admEmail} onChange={e => setAdmEmail(e.target.value)} placeholder="admin@example.com" type="email" className="w-full !rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Password</label>
+              <Input value={admPass} onChange={e => setAdmPass(e.target.value)} placeholder="Top secret password" type="password" className="w-full !rounded-xl" />
+            </div>
           </div>
           
-          <Button variant="primary" onClick={handleCreateAdmin} disabled={admLoading} className="w-full mt-2">
-            {admLoading ? 'Creating...' : 'Create Admin'}
+          <Button variant="primary" onClick={handleCreateAdmin} disabled={admLoading} className="w-full mt-4 !rounded-xl py-3 font-bold shadow-lg shadow-white/5">
+            {admLoading ? 'Creating Account...' : 'Create Admin'}
           </Button>
         </div>
       </Modal>

@@ -3,26 +3,29 @@ import { Reveal, Counter } from '../ui'
 
 export default function Stats() {
   return (
-    <div>
-      <div className="text-2xl font-bold">Stats</div>
-      <p className="mt-2 text-slate-600">A connected alumni network creating impact across departments and sessions.</p>
-      <div className="mt-6 grid grid-cols-3 gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-2xl font-bold text-primary tracking-tight">Community Impact</h2>
+        <p className="text-sm text-primary/70 leading-relaxed max-w-md">Our growing alumni network is making strides across departments and sessions.</p>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-3 md:gap-4 h-full">
         <Reveal delay={0}>
-          <div className="rounded-2xl bg-slate-50 p-6 text-center ring-1 ring-slate-100">
-            <div className="text-3xl font-extrabold text-[#0B4C72]"><Counter to={3373} duration={1500} /></div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Members</div>
+          <div className="h-full rounded-2xl bg-white p-6 md:p-8 text-center ring-1 ring-secondary shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-default group border border-slate-100">
+            <div className="text-3xl md:text-5xl font-black text-[#0B4C72] drop-shadow-sm"><Counter to={5381} duration={2} /></div>
+            <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 mt-4 group-hover:text-primary transition-colors">Member</div>
           </div>
         </Reveal>
-        <Reveal delay={100}>
-          <div className="rounded-2xl bg-slate-50 p-6 text-center ring-1 ring-slate-100">
-            <div className="text-3xl font-extrabold text-[#0B4C72]"><Counter to={15} duration={900} /></div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Departments</div>
+        <Reveal delay={150}>
+          <div className="h-full rounded-2xl bg-white p-6 md:p-8 text-center ring-1 ring-secondary shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-default group border border-slate-100">
+            <div className="text-3xl md:text-5xl font-black text-[#0B4C72] drop-shadow-sm"><Counter to={25} duration={1.2} /></div>
+            <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 mt-4 group-hover:text-primary transition-colors">Department's</div>
           </div>
         </Reveal>
-        <Reveal delay={200}>
-          <div className="rounded-2xl bg-slate-50 p-6 text-center ring-1 ring-slate-100">
-            <div className="text-3xl font-extrabold text-[#0B4C72]"><Counter to={6} duration={700} /></div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-1">Sessions</div>
+        <Reveal delay={300}>
+          <div className="h-full rounded-2xl bg-white p-6 md:p-8 text-center ring-1 ring-secondary shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-default group border border-slate-100">
+            <div className="text-3xl md:text-5xl font-black text-[#0B4C72] drop-shadow-sm"><Counter to={6} duration={0.8} /></div>
+            <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-primary/60 mt-4 group-hover:text-primary transition-colors">Sessions</div>
           </div>
         </Reveal>
       </div>
