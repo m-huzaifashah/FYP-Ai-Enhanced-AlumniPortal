@@ -97,25 +97,30 @@ export const updateEvent = (id: string | number, payload: { title: string, date:
 export const deleteEvent = (id: string | number) =>
   del(`/events/${id}`).catch(errorInterceptor('Failed to delete event'))
 
+export const toggleRSVP = (id: string | number) =>
+  post(`/events/${id}/rsvp`).catch(errorInterceptor('Failed to update registration status'))
+
 // ===============================
 // JOBS (ADMIN)
 // ===============================
-export const createJob = (payload: { title: string, company: string, location: string, link?: string, image?: File | null }) => {
+export const createJob = (payload: { title: string, company: string, location: string, link?: string, deadline?: string, image?: File | null }) => {
   const fd = new FormData()
   fd.append('title', payload.title)
   fd.append('company', payload.company)
   fd.append('location', payload.location)
   if (payload.link) fd.append('link', payload.link)
+  if (payload.deadline) fd.append('deadline', payload.deadline)
   if (payload.image) fd.append('image', payload.image)
   return post('/jobs', fd).catch(errorInterceptor('Failed to create job'))
 }
 
-export const updateJob = (id: string | number, payload: { title: string, company: string, location: string, link?: string, image?: File | null, removeImage?: boolean }) => {
+export const updateJob = (id: string | number, payload: { title: string, company: string, location: string, link?: string, deadline?: string, image?: File | null, removeImage?: boolean }) => {
   const fd = new FormData()
   fd.append('title', payload.title)
   fd.append('company', payload.company)
   fd.append('location', payload.location)
   if (payload.link) fd.append('link', payload.link)
+  if (payload.deadline) fd.append('deadline', payload.deadline)
   if (payload.image) fd.append('image', payload.image)
   if (payload.removeImage) fd.append('removeImage', 'true')
   return put(`/jobs/${id}`, fd).catch(errorInterceptor('Failed to update job'))
@@ -172,6 +177,17 @@ export const getTickets = () => get('/tickets').catch(errorInterceptor('Failed t
 
 export const updateTicketStatus = (id: string | number, status: string) =>
   put(`/tickets/${id}/status`, { status }).catch(errorInterceptor('Failed to update ticket status'))
+
+// ===============================
+// ANNOUNCEMENTS
+// ===============================
+export const getAnnouncements = () => get('/announcements').catch(errorInterceptor('Failed to load announcements'))
+
+export const createAnnouncement = (payload: { title: string, body: string, expiresAt: string }) =>
+  post('/announcements', payload).catch(errorInterceptor('Failed to create announcement'))
+
+export const deleteAnnouncement = (id: string | number) =>
+  del(`/announcements/${id}`).catch(errorInterceptor('Failed to delete announcement'))
 
 // ===============================
 // USERS/ADMIN

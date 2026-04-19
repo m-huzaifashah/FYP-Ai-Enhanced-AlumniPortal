@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { IconCard, Modal, Input, Button } from '../ui'
 import { getJobs, createJob } from '../api'
 
-type Job = { id: number | string; title: string; company: string; location: string; link: string; image?: string }
+type Job = { id: number | string; title: string; company: string; location: string; link: string; image?: string; deadline?: string }
 
 export default function Jobs({ role }: { role?: 'student' | 'admin' | 'alumni' | null }) {
   const [jobs, setJobs] = useState<Job[]>([])
@@ -15,6 +15,7 @@ export default function Jobs({ role }: { role?: 'student' | 'admin' | 'alumni' |
   const [jCompany, setJCompany] = useState('')
   const [jLoc, setJLoc] = useState('')
   const [jLink, setJLink] = useState('')
+  const [jDeadline, setJDeadline] = useState('')
   const [posting, setPosting] = useState(false)
 
   const fetchJobs = async () => {
@@ -37,9 +38,9 @@ export default function Jobs({ role }: { role?: 'student' | 'admin' | 'alumni' |
     if (!jTitle || !jCompany || !jLoc) return
     setPosting(true)
     try {
-      await createJob({ title: jTitle, company: jCompany, location: jLoc, link: jLink || '#' })
+      await createJob({ title: jTitle, company: jCompany, location: jLoc, link: jLink || '#', deadline: jDeadline })
       setPostOpen(false)
-      setJTitle(''); setJCompany(''); setJLoc(''); setJLink('')
+      setJTitle(''); setJCompany(''); setJLoc(''); setJLink(''); setJDeadline('')
       fetchJobs() // Refresh list
     } catch (e) {
       alert('Failed to post job')
@@ -80,6 +81,9 @@ export default function Jobs({ role }: { role?: 'student' | 'admin' | 'alumni' |
             <div className="mt-2 px-1">
               <div className="text-sm font-medium text-primary">{j.company}</div>
               <div className="text-xs text-primary">{j.location}</div>
+              {j.deadline && (
+                <div className="text-[10px] font-bold text-accent mt-1 tracking-wider uppercase">Apply by: {new Date(j.deadline).toLocaleDateString()}</div>
+              )}
             </div>
           </li>
         ))}
@@ -103,8 +107,12 @@ export default function Jobs({ role }: { role?: 'student' | 'admin' | 'alumni' |
             <label className="block text-sm font-medium text-primary mb-1">Application Link (Optional)</label>
             <Input value={jLink} onChange={e => setJLink(e.target.value)} placeholder="https://..." />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-primary mb-1">Last Date to Apply</label>
+            <input type="date" value={jDeadline} onChange={e => setJDeadline(e.target.value)} className="w-full rounded-full bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+          </div>
           <div className="pt-2">
-            <Button onClick={handlePostJob} disabled={posting || !jTitle || !jCompany || !jLoc} className="w-full justify-center">
+            <Button onClick={handlePostJob} disabled={posting || !jTitle || !jCompany || !jLoc || !jDeadline} className="w-full justify-center">
               {posting ? 'Posting...' : 'Post Job'}
             </Button>
           </div>

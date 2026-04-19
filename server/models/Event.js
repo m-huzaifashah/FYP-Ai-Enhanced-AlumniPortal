@@ -16,6 +16,13 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  rsvpCount: {
+    type: Number,
+    default: 0
+  },
+  registrants: [{
+    type: String // We will store user emails here for simplicity
+  }],
   description: {
     type: String
   },

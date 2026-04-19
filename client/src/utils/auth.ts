@@ -12,6 +12,10 @@ export function initAuthed(setAuthed: (v: boolean) => void, setRole?: (r: any) =
 }
 
 export function signOut(onAfter?: () => void) {
-  try { localStorage.removeItem('token'); localStorage.removeItem('role') } catch {}
+  try { 
+    localStorage.removeItem('token')
+    localStorage.removeItem('role')
+    localStorage.removeItem('email')
+  } catch {}
   onAfter && onAfter()
 }

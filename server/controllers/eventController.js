@@ -83,3 +83,39 @@ export const deleteEvent = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete event' })
   }
 }
+
+export const toggleRSVP = async (req, res) => {
+  const id = req.params.id
+  const userId = req.user?.email || req.user?.id // Fallback to email if id not available
+  if (!userId) return res.status(401).json({ error: 'Unauthorized: User identity not found' })
+
+  try {
+    const event = await Event.findById(id)
+    if (!event) return res.status(404).json({ error: 'Event not found' })
+
+    // Initialize fields if they don't exist
+    if (!event.registrants) event.registrants = []
+    if (event.rsvpCount === undefined) event.rsvpCount = event.registrants.length
+
+    const index = event.registrants.indexOf(userId)
+    let isRegistered = false
+
+    if (index === -1) {
+      // Register
+      event.registrants.push(userId)
+      event.rsvpCount = (event.rsvpCount || 0) + 1
+      isRegistered = true
+    } else {
+      // Unregister
+      event.registrants.splice(index, 1)
+      event.rsvpCount = Math.max(0, (event.rsvpCount || 0) - 1)
+      isRegistered = false
+    }
+
+    await event.save()
+    res.json({ rsvpCount: event.rsvpCount, isRegistered })
+  } catch (e) {
+    console.error('RSVP toggle error:', e)
+    res.status(500).json({ error: 'Failed to toggle RSVP' })
+  }
+}

@@ -19,6 +19,9 @@ const jobSchema = new mongoose.Schema({
   link: {
     type: String
   },
+  deadline: {
+    type: String
+  },
   image: {
     type: String  // base64 data URL
   }

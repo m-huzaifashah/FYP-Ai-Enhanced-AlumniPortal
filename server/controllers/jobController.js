@@ -67,7 +67,7 @@ export const getJobById = async (req, res) => {
 }
 
 export const createJob = async (req, res) => {
-  const { title, company, location, link } = req.body || {}
+  const { title, company, location, link, deadline } = req.body || {}
   const ok = typeof title === 'string' && title.trim() && typeof company === 'string' && typeof location === 'string'
   if (!ok) return res.status(400).json({ error: 'Invalid job' })
 
@@ -81,7 +81,7 @@ export const createJob = async (req, res) => {
   }
 
   try {
-    const job = await Job.create({ title, company, location, link: link || '', ...(image && { image }) })
+    const job = await Job.create({ title, company, location, link: link || '', deadline, ...(image && { image }) })
     return res.json({ ...job.toObject(), id: String(job._id) })
   } catch (e) {
     res.status(500).json({ error: 'Failed to create job' })
@@ -90,7 +90,7 @@ export const createJob = async (req, res) => {
 
 export const updateJob = async (req, res) => {
   const id = req.params.id
-  const { title, company, location, link } = req.body || {}
+  const { title, company, location, link, deadline } = req.body || {}
 
   let image = null
   if (req.file) {
@@ -102,7 +102,7 @@ export const updateJob = async (req, res) => {
   }
 
   try {
-    const updateDoc = { title, company, location, link }
+    const updateDoc = { title, company, location, link, deadline }
     if (image) updateDoc.image = image
     if (req.body.removeImage === 'true') updateDoc.image = null
 

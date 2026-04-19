@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react'
 import { Button, Card, Counter, Input, Modal } from '../ui'
-import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob, getTickets, updateTicketStatus, createAdminAccount } from '../api'
+import { createEvent, updateEvent, deleteEvent, createJob, updateJob, deleteJob, getTickets, updateTicketStatus, createAdminAccount, getAnnouncements, createAnnouncement, deleteAnnouncement } from '../api'
 
 type Event = { id: number | string; title: string; date: string; time?: string; location: string; description: string; image?: string }
-type Job = { id: number | string; title: string; company: string; location: string; link: string; image?: string }
+type Job = { id: number | string; title: string; company: string; location: string; link: string; image?: string; deadline?: string }
+type Announcement = { _id: string; title: string; body: string; expiresAt: string; createdAt: string }
 
 export default function Admin({ events, jobs, alumniCount, onEventsChanged, dataMode }: { events: Event[]; jobs: Job[]; alumniCount: number; onEventsChanged?: (next: Event[]) => void; dataMode?: 'db' | 'memory' }) {
   const [admOpen, setAdmOpen] = useState(false)
@@ -58,13 +59,17 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
   const [jobCompany, setJobCompany] = useState('')
   const [jobLocation, setJobLocation] = useState('')
   const [jobLink, setJobLink] = useState('')
+  const [jobDeadline, setJobDeadline] = useState('')
   const [jobImage, setJobImage] = useState<File | null>(null)
   const [jobImagePreview, setJobImagePreview] = useState<string>('')
   const [jobRemoveImage, setJobRemoveImage] = useState(false)
 
   const [annTitle, setAnnTitle] = useState('')
   const [annBody, setAnnBody] = useState('')
+  const [annExpiresAt, setAnnExpiresAt] = useState('')
   const [annStatus, setAnnStatus] = useState('')
+  const [annList, setAnnList] = useState<Announcement[]>([])
+  const [annLoading, setAnnLoading] = useState(false)
 
   const now = useMemo(() => new Date(), [])
   const upcomingCount = useMemo(() => evs.filter(e => new Date(e.date) >= now).length, [evs, now])
@@ -187,6 +192,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     setJobCompany('')
     setJobLocation('')
     setJobLink('')
+    setJobDeadline('')
     setJobImage(null)
     setJobImagePreview('')
     setJobRemoveImage(false)
@@ -199,6 +205,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
     setJobCompany(j.company)
     setJobLocation(j.location)
     setJobLink(j.link)
+    setJobDeadline(j.deadline || '')
     setJobImage(null)
     setJobImagePreview(j.image || '')
     setJobRemoveImage(false)
@@ -206,14 +213,14 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
   }
 
   const saveJob = async () => {
-    const ok = jobTitle.trim().length >= 2 && jobCompany.trim().length >= 2 && jobLocation.trim().length >= 2
+    const ok = jobTitle.trim().length >= 2 && jobCompany.trim().length >= 2 && jobLocation.trim().length >= 2 && jobDeadline
     if (!ok) return
     try {
       if (jobEditId == null) {
-        const created = await createJob({ title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim(), image: jobImage })
+        const created = await createJob({ title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim(), deadline: jobDeadline, image: jobImage })
         setJobsState(prev => [...prev, created])
       } else {
-        const updated = await updateJob(jobEditId, { title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim(), image: jobImage, removeImage: jobRemoveImage })
+        const updated = await updateJob(jobEditId, { title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim(), deadline: jobDeadline, image: jobImage, removeImage: jobRemoveImage })
         setJobsState(prev => prev.map(x => String(x.id) === String(jobEditId) ? updated : x))
       }
     } catch {}
@@ -244,6 +251,50 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
       setReports(prev => prev.map(t => t._id === id ? updated : t))
     } catch(err) {
       alert('Failed to update ticket')
+    }
+  }
+
+  const fetchAnnouncements = async () => {
+    setAnnLoading(true)
+    try {
+      const data = await getAnnouncements()
+      setAnnList(data)
+    } finally {
+      setAnnLoading(false)
+    }
+  }
+
+  React.useEffect(() => {
+    if (tab === 'announcements') fetchAnnouncements()
+  }, [tab])
+
+  const handlePublishAnnouncement = async () => {
+    const ok = annTitle.trim().length >= 2 && annBody.trim().length >= 10 && annExpiresAt
+    if (!ok) {
+       setAnnStatus('Fill subject, message (10+ chars), and expiry date')
+       return
+    }
+    setAnnLoading(true)
+    try {
+      await createAnnouncement({ title: annTitle.trim(), body: annBody.trim(), expiresAt: annExpiresAt })
+      setAnnStatus('Announcement published')
+      setAnnTitle('')
+      setAnnBody('')
+      setAnnExpiresAt('')
+      fetchAnnouncements()
+    } catch (e: any) {
+      setAnnStatus(e?.message || 'Failed to publish')
+    } finally {
+      setAnnLoading(false)
+    }
+  }
+
+  const handleDeleteAnnouncement = async (id: string) => {
+    try {
+      await deleteAnnouncement(id)
+      setAnnList(prev => prev.filter(a => a._id !== id))
+    } catch (e) {
+      alert('Failed to delete')
     }
   }
 
@@ -306,7 +357,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
                   )}
                   <div className="flex-1">
                     <div className="font-semibold">{e.title}</div>
-                    <div className="text-sm text-primary">{new Date(e.date).toLocaleDateString()} {e.time && `• ${e.time}`} • {e.location}</div>
+                    <div className="text-sm text-primary">{new Date(e.date).toLocaleDateString()} {e.time && `• ${new Date(`2000-01-01T${e.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`} • {e.location}</div>
                     <div className="text-xs text-primary line-clamp-2">{e.description}</div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -346,7 +397,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
                   <div className="flex-1">
                     <div className="font-semibold">{j.title}</div>
                     <div className="text-sm text-primary">{j.company} • {j.location}</div>
-                    <div className="text-xs text-primary line-clamp-2">{j.link}</div>
+                    <div className="text-xs text-primary">{j.deadline && `Deadline: ${new Date(j.deadline).toLocaleDateString()}`} • {j.link}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" onClick={() => openJobEdit(j)}>Edit</Button>
@@ -365,17 +416,45 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
       {tab === 'announcements' && (
         <Card className="p-6">
           <div className="text-xl font-semibold">Announcement Composer</div>
-          <div className="mt-4 space-y-3">
-            <Input value={annTitle} onChange={e=>setAnnTitle(e.target.value)} placeholder="Subject" />
-            <textarea value={annBody} onChange={e=>setAnnBody(e.target.value)} rows={5} className="w-full rounded-2xl bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary shadow-sm" placeholder="Write announcement" />
-            <div className="flex items-center gap-2">
-              <Button variant="primary" onClick={() => {
-                const ok = annTitle.trim().length >= 2 && annBody.trim().length >= 10
-                setAnnStatus(ok ? 'Announcement published' : 'Fill subject and message')
-                if (ok) { setAnnTitle(''); setAnnBody('') }
-              }}>Publish</Button>
-              {annStatus && <div className={(annStatus.includes('published') ? 'text-primary' : 'text-accent') + ' text-sm'}>{annStatus}</div>}
+          <div className="mt-4 space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input value={annTitle} onChange={e=>setAnnTitle(e.target.value)} placeholder="Subject" className="w-full" />
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-bold text-white/50 uppercase whitespace-nowrap">Expires On:</label>
+                <input type="date" value={annExpiresAt} onChange={e=>setAnnExpiresAt(e.target.value)} className="w-full rounded-full bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+              </div>
             </div>
+            <textarea value={annBody} onChange={e=>setAnnBody(e.target.value)} rows={5} className="w-full rounded-2xl bg-white px-4 py-3 text-sm text-primary ring-1 ring-secondary shadow-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Write announcement details..." />
+            <div className="flex items-center gap-2">
+              <Button variant="primary" disabled={annLoading} onClick={handlePublishAnnouncement}>
+                {annLoading ? 'Publishing...' : 'Publish Announcement'}
+              </Button>
+              {annStatus && <div className={(annStatus.includes('published') ? 'text-primary' : 'text-accent') + ' text-sm font-medium'}>{annStatus}</div>}
+            </div>
+          </div>
+
+          <div className="mt-12 pt-8 border-t border-white/10">
+            <div className="text-xl font-semibold mb-4">Active Announcements</div>
+            {annLoading && annList.length === 0 ? (
+               <div className="text-sm text-primary">Loading...</div>
+            ) : annList.length === 0 ? (
+               <div className="text-sm text-primary/60 italic">No active announcements.</div>
+            ) : (
+              <ul className="space-y-4">
+                {annList.map(a => (
+                  <li key={a._id} className="rounded-xl bg-white ring-1 ring-secondary p-4 shadow-sm">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-bold text-lg text-primary">{a.title}</div>
+                        <div className="text-xs text-primary/50 mt-0.5">Expires: {new Date(a.expiresAt).toLocaleDateString()} • Created: {new Date(a.createdAt).toLocaleDateString()}</div>
+                        <div className="mt-2 text-sm text-primary whitespace-pre-wrap">{a.body}</div>
+                      </div>
+                      <Button variant="outline" className="text-accent ring-accent/30 hover:ring-accent ml-4" onClick={() => handleDeleteAnnouncement(a._id)}>Delete</Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </Card>
       )}
@@ -451,7 +530,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Time</label>
-                <Input value={evTime} onChange={e=>setEvTime(e.target.value)} placeholder="e.g. 10:00 AM" className="w-full !rounded-xl" />
+                <input type="time" value={evTime} onChange={e=>setEvTime(e.target.value)} className="w-full rounded-xl bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Location</label>
@@ -503,7 +582,12 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
             <button onClick={() => setEvOpen(false)} className="px-4 py-2 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors">Cancel</button>
-            <Button variant="primary" onClick={saveEvent} disabled={evSaving} className="px-6 py-2 !rounded-xl shadow-lg shadow-white/5">
+            <Button 
+              variant="primary" 
+              onClick={saveEvent} 
+              disabled={evSaving || !evTitle.trim() || !evDate || !evTime || !evLocation.trim() || !evDesc.trim()} 
+              className={`px-6 py-2 !rounded-xl shadow-lg transition-all ${evSaving || !evTitle.trim() || !evDate || !evTime || !evLocation.trim() || !evDesc.trim() ? 'bg-primary/40 cursor-not-allowed opacity-50' : 'shadow-white/5'}`}
+            >
               {evSaving ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
@@ -537,6 +621,11 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
             <div>
                <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Application URL</label>
                <Input value={jobLink} onChange={e=>setJobLink(e.target.value)} placeholder="https://careers.company.com/..." className="w-full !rounded-xl" />
+            </div>
+
+            <div>
+               <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1 text-accent">Last Date to Apply</label>
+               <input type="date" value={jobDeadline} onChange={e=>setJobDeadline(e.target.value)} className="w-full rounded-xl bg-white px-4 py-3 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" />
             </div>
           </div>
 
@@ -578,7 +667,18 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
             <button onClick={() => setJobOpen(false)} className="px-4 py-2 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors">Cancel</button>
-            <Button variant="primary" onClick={saveJob} className="px-6 py-2 !rounded-xl shadow-lg shadow-white/5">Save Job</Button>
+            <Button 
+              variant="primary" 
+              onClick={saveJob} 
+              disabled={!jobTitle.trim() || !jobCompany.trim() || !jobLocation.trim() || !jobLink.trim() || !jobDeadline} 
+              className={`px-6 py-2 !rounded-xl shadow-lg transition-all ${
+                !jobTitle.trim() || !jobCompany.trim() || !jobLocation.trim() || !jobLink.trim() || !jobDeadline
+                  ? 'bg-primary/40 cursor-not-allowed opacity-50'
+                  : 'shadow-white/5'
+              }`}
+            >
+              Save Job
+            </Button>
           </div>
         </div>
       </Modal>

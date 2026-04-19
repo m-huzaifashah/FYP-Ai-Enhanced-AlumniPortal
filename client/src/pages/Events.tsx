@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Button, Card, Input, Modal, IconButton, Icon } from '../ui'
 import { getEvents } from '../api'
 
-type Event = { id: number | string; title: string; date: string; time?: string; location: string; description: string; image?: string }
+type Event = { id: number | string; title: string; date: string; time?: string; location: string; description: string; image?: string; rsvpCount?: number; registrants?: string[] }
 
 export default function Events() {
   const [city, setCity] = useState('')
@@ -23,7 +23,9 @@ export default function Events() {
         const data: Event[] = await getEvents()
         if (!stop) {
           setEvents(data)
-          setRsvp(Object.fromEntries(data.map(e => [e.id, Math.floor(Math.random()*40)+10])))
+          const counts: Record<string|number, number> = {}
+          data.forEach(e => { counts[e.id] = e.rsvpCount || 0 })
+          setRsvp(counts)
         }
       } catch (e: any) {
         if (!stop) setError(e?.message || 'Failed to load events')
@@ -50,10 +52,36 @@ export default function Events() {
   const upcoming = useMemo(() => filtered.filter(ev => new Date(ev.date) >= now), [filtered, now])
   const past = useMemo(() => filtered.filter(ev => new Date(ev.date) < now), [filtered, now])
 
-  const register = (ev: Event) => {
-    setRsvp(prev => ({ ...prev, [ev.id]: (prev[ev.id] || 0) + 1 }))
-    setActive(ev)
-    setOpen(true)
+  const handleToggleRSVP = async (ev: Event) => {
+    try {
+      const res = await (import('../api').then(m => m.toggleRSVP(ev.id)))
+      setRsvp(prev => ({ ...prev, [ev.id]: res.rsvpCount }))
+      
+      const userEmail = localStorage.getItem('email')
+      if (!userEmail) throw new Error('You must be logged in to register')
+
+      setEvents(prev => prev.map(item => {
+        if (String(item.id) === String(ev.id)) {
+          const registrants = [...(item.registrants || [])]
+          if (res.isRegistered) {
+             if (!registrants.includes(userEmail)) registrants.push(userEmail)
+          } else {
+             const idx = registrants.indexOf(userEmail)
+             if (idx !== -1) registrants.splice(idx, 1)
+          }
+          return { ...item, rsvpCount: res.rsvpCount, registrants }
+        }
+        return item
+      }))
+    } catch (err: any) {
+      alert(err.message || 'Failed to update registration')
+    }
+  }
+
+  const isRegistered = (ev: Event) => {
+    const userEmail = localStorage.getItem('email')
+    if (!userEmail) return false
+    return ev.registrants?.includes(userEmail) || false
   }
 
   const ICON = 'https://jrcrs.riphah.edu.pk/wp-content/uploads/2017/05/RIU-logo.png'
@@ -95,10 +123,16 @@ export default function Events() {
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold">{ev.title}</div>
-                    <div className="text-sm text-primary">{new Date(ev.date).toLocaleDateString()} {ev.time && `• ${ev.time}`} • {ev.location}</div>
+                    <div className="text-sm text-primary">{new Date(ev.date).toLocaleDateString()} {ev.time && `• ${new Date(`2000-01-01T${ev.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`} • {ev.location}</div>
                     <div className="mt-2 text-sm text-primary line-clamp-2">{ev.description}</div>
                     <div className="mt-3 flex items-center gap-2">
-                      <Button variant="primary" onClick={() => register(ev)}>Register</Button>
+                      <Button 
+                        variant={isRegistered(ev) ? 'outline' : 'primary'} 
+                        onClick={() => handleToggleRSVP(ev)}
+                        className={isRegistered(ev) ? 'bg-green-500/10 border-green-500 text-green-600 hover:bg-green-500/20' : ''}
+                      >
+                        {isRegistered(ev) ? '✓ Registered' : 'Register'}
+                      </Button>
                       <Button variant="outline" onClick={() => { setActive(ev); setOpen(true) }}>Details</Button>
                       <IconButton aria-label="Add to Calendar">
                         <Icon name="calendar" />
@@ -123,7 +157,7 @@ export default function Events() {
                 <img src={ev.image || `https://placehold.co/600x360/FFFFFF/0B4C72?text=${encodeURIComponent(ev.title)}`} alt={ev.title} className="w-full h-32 object-cover" />
                 <div className="p-3">
                   <div className="text-sm font-semibold">{ev.title}</div>
-                  <div className="text-xs text-primary">{new Date(ev.date).toLocaleDateString()} {ev.time && `• ${ev.time}`} • {ev.location}</div>
+                  <div className="text-xs text-primary">{new Date(ev.date).toLocaleDateString()} {ev.time && `• ${new Date(`2000-01-01T${ev.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`} • {ev.location}</div>
                 </div>
               </li>
             ))}
@@ -137,18 +171,20 @@ export default function Events() {
       <Modal open={open && !!active} onClose={() => setOpen(false)} title={active ? active.title : 'Event'}>
         {active && (
           <div className="space-y-3">
-            <div className="text-sm text-secondary">{new Date(active.date).toLocaleDateString()} {active.time && `at ${active.time}`}</div>
+            <div className="text-sm text-secondary">{new Date(active.date).toLocaleDateString()} {active.time && `at ${new Date(`2000-01-01T${active.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}</div>
             <div className="text-sm text-secondary">{active.location}</div>
             <div className="rounded-md bg-white/5 ring-1 ring-secondary p-3 text-sm text-secondary">{active.description}</div>
             <div className="flex items-center gap-2">
               <IconButton aria-label="Add to Calendar">
                 <Icon name="calendar" />
               </IconButton>
-              <Button variant="primary" onClick={() => {
-                if (!active) return
-                setRsvp(prev => ({ ...prev, [active.id]: (prev[active.id] || 0) + 1 }))
-                setOpen(false)
-              }}>Register</Button>
+              <Button 
+                variant={active && isRegistered(active) ? 'outline' : 'primary'} 
+                onClick={() => { if(active) { handleToggleRSVP(active); setOpen(false); } }}
+                className={active && isRegistered(active) ? 'bg-green-500/10 border-green-500 text-green-600 hover:bg-green-500/20' : ''}
+              >
+                {active && isRegistered(active) ? '✓ Registered' : 'Register Now'}
+              </Button>
             </div>
           </div>
         )}

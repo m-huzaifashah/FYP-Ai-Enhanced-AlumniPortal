@@ -5,10 +5,21 @@ import Hero from '../components/Hero'
 import JoinCards from '../components/JoinCards'
 import Stories from '../components/Stories'
 import Stats from '../components/Stats'
+import { getAnnouncements } from '../api'
+
+type Announcement = { _id: string; title: string; body: string; expiresAt: string }
 
 type Featured = { id: number; name: string; role: string; company: string }
 
 export default function Dashboard({ onNavigate, featured }: { onNavigate: (route: 'contact' | 'events' | 'directory') => void; featured: Featured[] }) {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+
+  useEffect(() => {
+    getAnnouncements().then(res => {
+      setAnnouncements(res);
+    }).catch(err => console.error('Dashboard: Load failed', err))
+  }, [])
+  
   const location = useLocation()
   useEffect(() => {
     if (location.hash) {
@@ -31,7 +42,31 @@ export default function Dashboard({ onNavigate, featured }: { onNavigate: (route
   }, [TESTIMONIALS.length])
   return (
     <section className="space-y-32 pb-32">
-      <Hero onNavigate={onNavigate} image="/hero.jpg" />
+      <div className="relative">
+        {announcements.length > 0 && (
+          <div className="bg-primary/95 border-b border-white/10 backdrop-blur-md relative z-[100] px-4 py-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col gap-4">
+                {announcements.map((a, i) => (
+                  <div key={a._id} className={"flex items-start gap-4 " + (i !== 0 ? "pt-4 border-t border-white/10" : "")}>
+                    <div className="bg-white/10 rounded-xl p-3 text-2xl shadow-inner animate-bounce">📢</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">Latest Announcement</span>
+                        <div className="bg-accent h-1.5 w-1.5 rounded-full animate-pulse" />
+                      </div>
+                      <h3 className="text-xl font-extrabold text-white tracking-tight">{a.title}</h3>
+                      <p className="text-white/80 text-sm leading-relaxed mt-1 font-medium italic">{a.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <Hero onNavigate={onNavigate} image="/hero.jpg" />
+      </div>
 
 
       <div id="why-join-us">

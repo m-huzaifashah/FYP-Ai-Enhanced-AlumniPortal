@@ -99,8 +99,8 @@ export function Button({ children, onClick, variant = 'primary', className = '',
   )
 }
 
-export function Input({ value, onChange, placeholder, className = '' }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder?: string; className?: string }) {
-  return <input value={value} onChange={onChange} placeholder={placeholder} className={`rounded-full bg-white px-4 py-2 text-sm text-primary placeholder-slate-500 ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-shadow duration-150 ${className}`} />
+export function Input({ value, onChange, placeholder, type = 'text', className = '' }: { value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder?: string; type?: string; className?: string }) {
+  return <input type={type} value={value} onChange={onChange} placeholder={placeholder} className={`rounded-full bg-white px-4 py-2 text-sm text-primary placeholder-slate-500 ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-shadow duration-150 ${className}`} />
 }
 
 export function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
