@@ -1,0 +1,41 @@
+# ============================================================
+# Resume Analyzer Microservice — requirements.txt (optimized)
+# ============================================================
+
+# --- Web Framework ---
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+
+# --- PDF Parsing ---
+pdfminer.six==20231228
+
+# --- DOCX Parsing ---
+python-docx==1.1.2
+
+# --- NLP ---
+spacy==3.7.4
+thinc==8.2.3
+preshed>=3.0.9,<3.1.0
+cymem>=2.0.2,<2.1.0
+
+# --- Semantic Scoring ---
+sentence-transformers==2.7.0
+torch==2.2.2
+
+# --- ML ---
+scikit-learn>=1.4,<1.5
+numpy>=1.26,<2.0
+
+# --- Keyword Extraction ---
+yake==0.4.8
+
+# --- Visualization ---
+matplotlib==3.8.4
+
+# --- Utilities ---
+python-magic==0.4.27
+Pillow==10.3.0
+pydantic==2.7.1
+python-jose==3.3.0
+httpx==0.27.0

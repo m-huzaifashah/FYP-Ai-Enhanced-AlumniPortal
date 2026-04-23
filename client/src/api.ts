@@ -162,6 +162,22 @@ export const analyzeSkillGapRoleLevel = async (resume: File, role: string, level
 }
 
 // ===============================
+// 🔥 ML BACKEND — ATS RESUME ANALYZER
+// ===============================
+const RESUME_API = (import.meta as any).env?.VITE_RESUME_API_URL || 'http://127.0.0.1:8001'
+const resumeApi = axios.create({ baseURL: RESUME_API })
+resumeApi.interceptors.response.use(res => res.data, errorInterceptor('Resume Analyzer request failed'))
+
+export const analyzeResume = async (file: File, jobDescription: string): Promise<any> => {
+  const fd = new FormData()
+  fd.append('file', file)
+  fd.append('job_description', jobDescription)
+  return resumeApi.post('/analyze', fd)
+    .then(res => res as any)
+    .catch(errorInterceptor('ATS resume analysis failed'))
+}
+
+// ===============================
 // CONTACT / SUPPORT
 // ===============================
 export const postContact = (payload: { name: string, email: string, message: string }) =>
