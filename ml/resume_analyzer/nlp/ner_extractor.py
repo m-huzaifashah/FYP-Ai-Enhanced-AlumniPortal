@@ -14,12 +14,24 @@ Outputs a clean structured entity dict ready for the scoring engine.
 import re
 import json
 import logging
+import datetime
 from pathlib import Path
 from typing import Optional
 
 import spacy
 from spacy.matcher import PhraseMatcher, Matcher
 from spacy.tokens import Doc
+
+try:
+    from gliner import GLiNER
+except ImportError:
+    GLiNER = None
+
+try:
+    from sentence_transformers import SentenceTransformer
+    from sklearn.metrics.pairwise import cosine_similarity
+except ImportError:
+    SentenceTransformer = None
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +186,24 @@ GPA_PATTERNS = [
     r"(\d+\.\d+)\s*/\s*5(?:\.0)?",
 ]
 
+# ---------------------------------------------------------------------------
+# Degree field validation helpers
+# ---------------------------------------------------------------------------
+# Words that CANNOT start a valid academic field name
+_FIELD_NON_STARTERS = {
+    "to", "for", "using", "with", "by", "the", "a", "an", "and",
+    "or", "of", "at", "in", "on", "is", "are", "was", "were",
+    "improve", "develop", "build", "create", "implement",
+}
+
+# Technical terms that disqualify a string from being an academic field
+_FIELD_TECH_BLOCKLIST = {
+    "sql", "server", "log", "api", "http", "json", "xml", "html",
+    "css", "git", "docker", "linux", "ubuntu", "windows", "azure",
+    "aws", "gcp", "mongodb", "mysql", "postgresql", "redis", "skills",
+    "storage", "classification", "queries", "configuration",
+}
+
 
 # ===========================================================================
 # NERExtractor — Main Class
@@ -220,15 +250,56 @@ class NERExtractor:
         self.phrase_matcher = self._build_phrase_matcher()
         self.rule_matcher = self._build_rule_matcher()
 
+        # Initialize ML Models for Hybrid Pipeline
+        if GLiNER:
+            logger.info("Loading GLiNER model: urchade/gliner_medium-v2.1")
+            try:
+                self.gliner_model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
+            except Exception as e:
+                logger.error(f"Failed to load GLiNER: {e}")
+                self.gliner_model = None
+        else:
+            self.gliner_model = None
+
+        if SentenceTransformer:
+            logger.info("Loading SBERT model: BAAI/bge-base-en-v1.5")
+            try:
+                self.sbert_model = SentenceTransformer("BAAI/bge-base-en-v1.5")
+                self.sbert_model.max_seq_length = 512
+                self._category_anchors = self._compute_category_anchors()
+            except Exception as e:
+                logger.error(f"Failed to load SBERT: {e}")
+                self.sbert_model = None
+                self._category_anchors = {}
+        else:
+            self.sbert_model = None
+            self._category_anchors = {}
+
         logger.info(
             f"NERExtractor ready | "
             f"lexicon_skills={sum(len(v) for v in self.lexicon.values())} | "
-            f"aliases={len(SKILL_ALIASES)}"
+            f"aliases={len(SKILL_ALIASES)} | "
+            f"gliner={'yes' if self.gliner_model else 'no'} | "
+            f"sbert={'yes' if self.sbert_model else 'no'}"
         )
 
     # -----------------------------------------------------------------------
     # Setup
     # -----------------------------------------------------------------------
+
+    def _compute_category_anchors(self) -> dict:
+        """Precompute SBERT embeddings for each skill category."""
+        categories = list(self.lexicon.keys())
+        skip = {"degree_keywords", "designation_keywords", "soft_skills"}
+        valid_cats = [c for c in categories if c not in skip]
+        
+        anchors = {}
+        for cat in valid_cats:
+            # Add 'query:' prefix for BGE models
+            cat_clean = cat.replace("_", " ").title()
+            emb = self.sbert_model.encode(f"query: {cat_clean} skills", normalize_embeddings=True)
+            anchors[cat] = emb
+        return anchors
 
     def _load_lexicon(self) -> dict:
         with open(LEXICON_PATH, "r", encoding="utf-8") as f:
@@ -296,8 +367,8 @@ class NERExtractor:
 
         # Focus skill extraction on the skills section + full text
         skills_text = sections.get("skills", "") + "\n" + raw_text
-        exp_text = sections.get("experience", "") + "\n" + raw_text
-        edu_text = sections.get("education", "") + "\n" + raw_text
+        exp_text = sections.get("experience", "") or raw_text
+        edu_text = sections.get("education", "") or raw_text
 
         # --- Extract each entity type ---
         skills, skill_categories = self._extract_skills(skills_text)
@@ -352,10 +423,10 @@ class NERExtractor:
             if canonical:
                 found_skills[canonical] = category
 
-        # --- Pass 2: Alias matching on lowercased text ---
-        text_lower = text.lower()
+        # --- Pass 2: Alias matching with word boundaries ---
         for alias, canonical in SKILL_ALIASES.items():
-            if alias in text_lower:
+            pattern = r'(?<![A-Za-z0-9_])' + re.escape(alias) + r'(?![A-Za-z0-9_])'
+            if re.search(pattern, text, re.IGNORECASE):
                 # Only add if the canonical form isn't already present
                 if canonical not in found_skills:
                     category = self._get_category(canonical)
@@ -367,6 +438,30 @@ class NERExtractor:
         for skill in short_skills:
             if skill in tokens and skill not in found_skills:
                 found_skills[skill] = self._get_category(skill)
+
+        # --- Pass 4: GLiNER Zero-Shot Extraction ---
+        if self.gliner_model:
+            try:
+                gliner_text = text[:10000] # Limit size for performance
+                entities = self.gliner_model.predict_entities(gliner_text, labels=["skill", "tool", "framework", "software"])
+                
+                for ent in entities:
+                    if ent["score"] < 0.5:
+                        continue
+                        
+                    skill_text = ent["text"].strip()
+                    if len(skill_text) < 2 and skill_text not in short_skills:
+                        continue
+                        
+                    if skill_text.lower() in self.nlp.Defaults.stop_words:
+                        continue
+                        
+                    canonical = self._canonicalize(skill_text)
+                    if canonical and canonical not in found_skills:
+                        category = self._get_ml_category(canonical)
+                        found_skills[canonical] = category
+            except Exception as e:
+                logger.error(f"GLiNER extraction failed: {e}")
 
         # Build category map
         skill_categories: dict[str, list] = {}
@@ -404,6 +499,34 @@ class NERExtractor:
                 return category
         return "other"
 
+    def _get_ml_category(self, skill: str) -> str:
+        """Categorize a zero-shot skill using SBERT embeddings."""
+        cat = self._get_category(skill)
+        if cat != "other":
+            return cat
+            
+        if not self.sbert_model or not self._category_anchors:
+            return "other"
+            
+        try:
+            skill_emb = self.sbert_model.encode(f"query: {skill}", normalize_embeddings=True).reshape(1, -1)
+            
+            best_cat = "other"
+            best_score = 0.0
+            
+            for cat_name, cat_emb in self._category_anchors.items():
+                score = float(cosine_similarity(skill_emb, cat_emb.reshape(1, -1))[0][0])
+                if score > best_score:
+                    best_score = score
+                    best_cat = cat_name
+                    
+            if best_score < 0.4:
+                return "other"
+            return best_cat
+        except Exception as e:
+            logger.warning(f"SBERT categorization failed for {skill}: {e}")
+            return "other"
+
     # -----------------------------------------------------------------------
     # Degree Extraction
     # -----------------------------------------------------------------------
@@ -411,34 +534,53 @@ class NERExtractor:
     def _extract_degrees(self, text: str) -> list[dict]:
         """
         Extract academic degrees with field of study.
-        e.g. {"degree": "BSc", "field": "Computer Science", "institution": "FAST"}
+
+        Uses two patterns to reduce false positives:
+          - Long-form degrees (bachelor, master, phd...) allow optional 'in/of'
+          - Short ambiguous abbreviations (ms, me, bs, be) REQUIRE 'in/of'
+            to avoid matching e.g. "MS SQL Server" as a degree.
         """
         degrees = []
-        degree_keywords = self.lexicon.get("degree_keywords", [])
 
-        # Pattern: degree + optional "in" + field
-        degree_pattern = re.compile(
-            r"(bachelor|master|b\.?sc?\.?|m\.?sc?\.?|b\.?e\.?|m\.?e\.?|"
-            r"b\.?s\.?|m\.?s\.?|ph\.?d\.?|mba|bcs|mcs|be|me|bs|ms|hnd)"
+        # Long-form / unambiguous degrees — 'in/of' optional
+        long_pattern = re.compile(
+            r"\b(bachelor(?:'s)?|master(?:'s)?|b\.sc\.?|m\.sc\.?|"
+            r"ph\.d\.?|mba|bcs|mcs|hnd|doctorate)\b"
             r"(?:\s+of|\s+in)?\s+"
             r"(?:science\s+in\s+|engineering\s+in\s+|arts?\s+in\s+)?"
-            r"([a-z\s]+?)(?=\s*(?:from|at|,|\n|$|\())",
+            r"([A-Za-z][A-Za-z ]{2,50}?)(?=\s*(?:from|at|,|\n|$|\())",
             re.IGNORECASE,
         )
 
-        for match in degree_pattern.finditer(text):
-            degree_abbr = match.group(1).strip()
-            field = match.group(2).strip()
+        # Short abbreviations — 'in/of' optional because the field validator
+        # blocks tech jargon (sql, server...), so 'BS Computer Science' is safe
+        short_pattern = re.compile(
+            r"\b(b\.?e\.?|m\.?e\.?|b\.?s\.?|m\.?s\.?|be|me|bs|ms)\b"
+            r"(?:\s+of|\s+in)?\s+"
+            r"(?:science\s+in\s+|engineering\s+in\s+|arts?\s+in\s+)?"
+            r"([A-Za-z][A-Za-z ]{2,50}?)(?=\s*(?:from|at|,|\n|$|\())",
+            re.IGNORECASE,
+        )
 
-            # Clean up field
-            field = re.sub(r"\s+", " ", field).title()
-            if len(field) > 60 or len(field) < 3:
-                continue
+        # Compound abbreviations common in Pakistan: BSCS, MSCS, BSSE, BSAI etc.
+        compound_pattern = re.compile(
+            r"\b(BSCS|MSCS|BSSE|BSAI|BSIT|BSCE|BSEE|BSME|MSAI|MSIT|MSSE)\b"
+            r"(?:\s+in)?\s+"
+            r"([A-Za-z][A-Za-z ]{2,50}?)(?=\s*(?:from|at|,|\n|$|\())",
+        )
 
-            degrees.append({
-                "degree": degree_abbr.upper().replace(".", ""),
-                "field": field,
-            })
+        for pattern in (long_pattern, short_pattern, compound_pattern):
+            for match in pattern.finditer(text):
+                degree_abbr = match.group(1).strip()
+                field = re.sub(r"\s+", " ", match.group(2).strip()).title()
+
+                if not self._is_valid_degree_field(field):
+                    continue
+
+                degrees.append({
+                    "degree": degree_abbr.upper().replace(".", ""),
+                    "field": field,
+                })
 
         # Deduplicate
         seen = set()
@@ -451,26 +593,115 @@ class NERExtractor:
 
         return unique_degrees
 
+    def _is_valid_degree_field(self, field: str) -> bool:
+        """Return True only if the captured string looks like an academic discipline."""
+        if not field:
+            return False
+        words = field.lower().split()
+        # Reject sentence fragments (too many words)
+        if len(words) > 6:
+            return False
+        # Must not start with a verb/preposition/article
+        if words and words[0] in _FIELD_NON_STARTERS:
+            return False
+        # Must not contain technical jargon
+        if any(w in _FIELD_TECH_BLOCKLIST for w in words):
+            return False
+        return True
+
     # -----------------------------------------------------------------------
-    # Organization Extraction (spaCy NER)
+    # Organization Extraction (suffix-anchored regex)
+    #
+    # spaCy's ORG NER was trained on news/web text and consistently
+    # misclassifies resume entities (projects, courses, skills) as orgs.
+    # Anchoring on known org-type suffixes is far more reliable here.
+    # Common resume section words that must not appear as org name prefixes
+    _ORG_SECTION_BLOCKLIST = {
+        "education", "experience", "skills", "projects", "summary",
+        "objective", "profile", "contact", "references", "certifications",
+        "achievements", "awards", "languages", "interests", "activities",
+    }
+
+    _ORG_SUFFIX_RE = re.compile(
+        r"([A-Z][A-Za-z0-9][^\S\n]{0,1}[A-Za-z0-9&\-.,' ]{1,58}?)[^\S\n]+"
+        r"(University|College|Institute|Polytechnic|School\b|"
+        r"Corporation|Corp\.?|Incorporated|Inc\.?|Limited|Ltd\.?|"
+        r"Pvt\.?[^\S\n]*Ltd\.?|LLC|GmbH|"
+        r"Technologies|Technology|Solutions|Software|"
+        r"Consulting|Consultancy|Group|Company|Co\.?|Foundation|"
+        r"Hospital|Bank|Authority|Agency|Department|Ministry|"
+        r"Services|Enterprises|Industries|Labs?|Research)\b",
+        re.MULTILINE,
+    )
+    # Organization Extraction
     # -----------------------------------------------------------------------
 
     def _extract_organizations(self, text: str) -> list[str]:
-        """Use spaCy's built-in ORG NER to extract companies/universities."""
-        doc = self.nlp(text[:50000])
-        orgs = set()
+        """Extract companies and universities using suffix-anchored regex.
 
-        for ent in doc.ents:
-            if ent.label_ == "ORG":
-                org_text = ent.text.strip()
-                # Filter noise
-                if (len(org_text) > 2 and
-                    len(org_text) < 80 and
-                    not org_text.isdigit() and
-                    "\n" not in org_text):
-                    orgs.add(org_text)
+        Only text immediately preceding a known org-type keyword
+        (University, Ltd, Technologies, etc.) is accepted, preventing the
+        false positives that spaCy's ORG NER produces on resume text
+        (project names, course titles, and skills all get misclassified).
+        """
+        orgs = set()
+        _noise_symbols = re.compile(r"[\u2022\(\)\[\]{}:;\\,]")
+        _skip_prefixes = {"a", "an", "the", "of", "at", "in", "and", "or"}
+
+        for match in self._ORG_SUFFIX_RE.finditer(text):
+            prefix = match.group(1).strip()
+            suffix = match.group(2).strip()
+            full = f"{prefix} {suffix}"
+
+            # Reject if spans a newline (section headers bleed into next line)
+            if "\n" in full:
+                continue
+            # Reject PDF capitalization artifacts
+            if self._has_embedded_capitals(full):
+                continue
+            # Reject trivial/empty prefixes
+            if not prefix or prefix.lower() in _skip_prefixes:
+                continue
+            # Reject comma-containing entries (course lists like "OOP, DB Systems")
+            if "," in prefix:
+                continue
+            # Reject if prefix starts with a resume section word
+            first_word = prefix.split()[0].lower() if prefix.split() else ""
+            if first_word in self._ORG_SECTION_BLOCKLIST:
+                continue
+            # Reject noise symbols
+            if _noise_symbols.search(full):
+                continue
+
+            orgs.add(full.strip())
+
+        # --- Supplementary pass: employer names without standard suffixes ---
+        # Catches companies like "CodeAlpha" from "Intern — CodeAlpha".
+        _exp_employer_re = re.compile(
+            r"(?:\u2014|--|(?<!\w)at(?!\w))\s+([A-Z][A-Za-z0-9][A-Za-z0-9\s&.\-]{0,50}?)"
+            r"(?=\s*(?:\n|$|,|\(|\|))",
+            re.MULTILINE,
+        )
+        _generic = {
+            "the", "a", "an", "and", "or", "of", "in", "on", "at", "my", "our",
+            "this", "that", "which", "where", "experience", "education",
+            "skills", "projects", "summary",
+        }
+        for m in _exp_employer_re.finditer(text):
+            company = m.group(1).strip()
+            if (not company or company.lower() in _generic
+                    or self._has_embedded_capitals(company)
+                    or not (2 <= len(company) <= 60)
+                    or "," in company):
+                continue
+            orgs.add(company)
 
         return sorted(orgs)
+
+    def _has_embedded_capitals(self, text: str) -> bool:
+        """Detect PDF extraction artifacts: lowercase letter immediately followed
+        by an uppercase letter within a word (e.g. 'SoftwaRe', 'queRies')."""
+        return bool(re.search(r'[a-z][A-Z]', text))
 
     # -----------------------------------------------------------------------
     # Designation Extraction
@@ -478,31 +709,36 @@ class NERExtractor:
 
     def _extract_designations(self, text: str, sections: dict) -> list[str]:
         """
-        Extract job titles from experience section + spaCy NER.
-        Cross-references with designation keywords from lexicon.
+        Extract job titles from the experience section ONLY.
+
+        Searching the full raw_text caused false positives: titles like 'CTO'
+        or 'COO' mentioned anywhere (e.g. 'reported to the CTO') were picked up.
+        Now keyword matching is limited to the experience section, and the regex
+        approach also targets the experience section first.
         """
         designations = set()
         designation_keywords = self.lexicon.get("designation_keywords", [])
 
-        # Approach 1: Keyword matching in experience section
-        exp_text = sections.get("experience", "") + "\n" + text
+        # Approach 1: Keyword matching — experience section ONLY (not full raw text)
+        exp_text = sections.get("experience", "")
         exp_lower = exp_text.lower()
 
         for title in designation_keywords:
             if title.lower() in exp_lower:
                 designations.add(title)
 
-        # Approach 2: spaCy NER for PERSON-adjacent titles
-        # (spaCy sometimes tags job titles under ORG or misses them)
+        # Approach 2: Regex on experience section for explicit role patterns
         job_title_pattern = re.compile(
             r"(?:as\s+(?:a\s+|an\s+)?|worked\s+as\s+(?:a\s+|an\s+)?|"
             r"position\s*:\s*|role\s*:\s*|title\s*:\s*)"
             r"([A-Z][a-zA-Z\s/]+?)(?=\s*(?:at|@|,|\n|$))",
             re.MULTILINE,
         )
-        for match in job_title_pattern.finditer(text):
+        search_text = exp_text if exp_text else text
+        for match in job_title_pattern.finditer(search_text):
             title = match.group(1).strip()
-            if 3 < len(title) < 50:
+            # Skip if it has embedded PDF artifacts
+            if 3 < len(title) < 50 and not self._has_embedded_capitals(title):
                 designations.add(title)
 
         return sorted(designations)
@@ -531,7 +767,6 @@ class NERExtractor:
             r"(20\d{2}|19\d{2})\s*[-–]\s*(20\d{2}|present|current|now)",
             re.IGNORECASE,
         )
-        import datetime
         current_year = datetime.datetime.now().year
 
         for match in date_range_pattern.finditer(text):

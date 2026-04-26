@@ -469,10 +469,12 @@ class SuggestionsGenerator:
             return suggestions
 
         text_lower = raw_text.lower()
-        missing_kw = [
-            kw for kw in jd_keywords
-            if kw.lower() not in text_lower
-        ]
+        import re
+        missing_kw = []
+        for kw in jd_keywords:
+            pattern = re.compile(rf"\b{re.escape(kw.lower())}\b")
+            if not pattern.search(text_lower):
+                missing_kw.append(kw)
 
         if missing_kw:
             kw_str = ", ".join(f'"{kw}"' for kw in missing_kw[:6])

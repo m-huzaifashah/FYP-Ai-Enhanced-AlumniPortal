@@ -7,11 +7,12 @@ Uses Sentence-BERT (SBERT) to create contextual embeddings of the resume
 and job description, then computes cosine similarity. This solves the
 legacy ATS problem where "predictive models" != "Machine Learning".
 
-Final ATS Score Formula (from research paper):
-  score = (semantic_match   × 0.45)
-        + (keyword_coverage × 0.25)
-        + (formatting_score × 0.15)
-        + (section_complete × 0.15)
+Final ATS Score Formula (from ats_scorer.py):
+  score = (semantic_match   × 0.35)
+        + (keyword_coverage × 0.30)
+        + (experience_match × 0.15)
+        + (keyword_density  × 0.10)
+        + (formatting_score × 0.10)
 
 All sub-scores are 0–100. Final score is 0–100.
 """
@@ -313,19 +314,23 @@ class SemanticScorer:
 
         for skill in required:
             skill_lower = skill.lower()
-            # Check direct match or partial match
-            found = (
-                skill_lower in resume_skills or
-                any(skill_lower in rs or rs in skill_lower for rs in resume_skills)
-            )
+            # Check direct match
+            found = skill_lower in resume_skills
+            if not found and len(skill_lower) > 2:
+                # Check for strict word boundary match to prevent "c" matching "scikit-learn"
+                pattern = re.compile(rf"\b{re.escape(skill_lower)}\b")
+                found = any(pattern.search(rs) or (len(rs) > 2 and re.search(rf"\b{re.escape(rs)}\b", skill_lower)) for rs in resume_skills)
             (matched if found else missing).append(skill)
 
-        # Preferred skills give a small bonus (half weight)
-        preferred_matched = sum(
-            1 for s in preferred
-            if s.lower() in resume_skills or
-               any(s.lower() in rs or rs in s.lower() for rs in resume_skills)
-        )
+        preferred_matched = 0
+        for s in preferred:
+            s_lower = s.lower()
+            if s_lower in resume_skills:
+                preferred_matched += 1
+            elif len(s_lower) > 2:
+                pattern = re.compile(rf"\b{re.escape(s_lower)}\b")
+                if any(pattern.search(rs) or (len(rs) > 2 and re.search(rf"\b{re.escape(rs)}\b", s_lower)) for rs in resume_skills):
+                    preferred_matched += 1
 
         total_required = len(required)
         if total_required == 0:

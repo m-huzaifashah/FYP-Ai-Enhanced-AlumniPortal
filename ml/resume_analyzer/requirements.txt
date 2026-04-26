@@ -3,18 +3,18 @@
 # ============================================================
 
 # --- Web Framework ---
-fastapi==0.111.0
-uvicorn[standard]==0.29.0
+fastapi
+uvicorn[standard]
 python-multipart==0.0.9
 
 # --- PDF Parsing ---
-pdfminer.six==20231228
+pdfplumber==0.11.0
 
 # --- DOCX Parsing ---
 python-docx==1.1.2
 
 # --- NLP ---
-spacy==3.7.4
+spacy
 thinc==8.2.3
 preshed>=3.0.9,<3.1.0
 cymem>=2.0.2,<2.1.0
@@ -26,6 +26,11 @@ torch==2.2.2
 # --- ML ---
 scikit-learn>=1.4,<1.5
 numpy>=1.26,<2.0
+xgboost>=2.0,<3.0
+lightgbm>=4.0,<5.0
+
+# --- Zero-Shot NER (optional) ---
+gliner>=0.1.12
 
 # --- Keyword Extraction ---
 yake==0.4.8

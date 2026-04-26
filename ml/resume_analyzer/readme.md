@@ -153,10 +153,11 @@ job_description: "We are hiring a Python Django developer with Docker..."
 
 ```
 ATS Score =
-  SBERT Semantic Similarity  × 45%
-+ Skill Keyword Coverage     × 25%
-+ Formatting Compliance      × 15%
-+ Section Completeness       × 15%
+  SBERT Semantic Similarity  × 35%
++ Skill Keyword Coverage     × 30%
++ Experience Gap Penalty     × 15%
++ Keyword Density            × 10%
++ Formatting Compliance      × 10%
 ```
 
 ## Running Tests

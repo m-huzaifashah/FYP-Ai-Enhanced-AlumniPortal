@@ -324,9 +324,9 @@ export default function CareerSupport() {
                 )}
 
                 {/* Row 3: Skills */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-white rounded-2xl shadow-lg ring-1 ring-secondary p-6">
-                    <h3 className="font-bold text-primary mb-1">✅ Matched Skills</h3>
+                    <h3 className="font-bold text-primary mb-1">✅ Matched</h3>
                     <p className="text-xs text-primary/50 mb-3">{atsResult.skills?.matched_skills?.length || 0} of {atsResult.skills?.jd_required?.length || 0} required skills found</p>
                     <div className="flex flex-wrap gap-2">
                       {(atsResult.skills?.matched_skills || []).map((s: string) => (
@@ -336,13 +336,28 @@ export default function CareerSupport() {
                     </div>
                   </div>
                   <div className="bg-white rounded-2xl shadow-lg ring-1 ring-secondary p-6">
-                    <h3 className="font-bold text-primary mb-1">❌ Missing Skills</h3>
+                    <h3 className="font-bold text-primary mb-1">❌ Missing</h3>
                     <p className="text-xs text-primary/50 mb-3">Add these to improve your score</p>
                     <div className="flex flex-wrap gap-2">
                       {(atsResult.skills?.missing_skills || []).map((s: string) => (
                         <span key={s} className="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-sm font-medium ring-1 ring-amber-200">{s}</span>
                       ))}
                       {!(atsResult.skills?.missing_skills?.length) && <p className="text-sm text-emerald-600 font-medium">All required skills found! 🎉</p>}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-lg ring-1 ring-secondary p-6">
+                    <h3 className="font-bold text-primary mb-1">🌟 Extra Skills</h3>
+                    <p className="text-xs text-primary/50 mb-3">Skills on resume not required by JD</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(() => {
+                        const resumeSkills = atsResult.skills?.resume_skills || [];
+                        const matchedSkills = atsResult.skills?.matched_skills || [];
+                        const preferredSkills = atsResult.skills?.jd_preferred || [];
+                        const extraSkills = resumeSkills.filter((s: string) => !matchedSkills.includes(s) && !preferredSkills.includes(s));
+                        return extraSkills.length > 0 ? extraSkills.map((s: string) => (
+                          <span key={s} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium ring-1 ring-blue-200">{s}</span>
+                        )) : <p className="text-sm text-primary/40">None found</p>;
+                      })()}
                     </div>
                   </div>
                 </div>

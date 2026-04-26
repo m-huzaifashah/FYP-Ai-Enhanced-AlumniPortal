@@ -14,18 +14,14 @@ Handles:
 import re
 import io
 import logging
+import datetime
 from pathlib import Path
 from typing import Optional
 
 # PDF parsing
-from pdfminer.high_level import extract_pages
-from pdfminer.layout import (
-    LAParams, LTPage, LTTextBox, LTTextLine,
-    LTFigure, LTImage, LTAnno
-)
-from pdfminer.pdfpage import PDFPage
-from pdfminer.converter import PDFPageAggregator
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+import pdfplumber
+from sklearn.cluster import KMeans
+import numpy as np
 
 # DOCX parsing
 from docx import Document as DocxDocument
@@ -68,15 +64,11 @@ PRESERVE_TECHNICAL = [
 
 class PDFParser:
     """
-    Extracts text from PDFs using pdfminer.six with coordinate-based
-    heuristics to correctly reconstruct multi-column layouts.
+    Extracts text from PDFs using pdfplumber with KMeans clustering
+    to natively solve the two-column bleed-through issue.
     """
 
-    def __init__(self, column_threshold: float = 0.45):
-        """
-        column_threshold: fraction of page width used to split columns.
-        0.45 means anything left of 45% page width = left column.
-        """
+    def __init__(self, column_threshold: float = 0.25):
         self.column_threshold = column_threshold
 
     def is_scanned(self, file_bytes: bytes) -> bool:
@@ -84,82 +76,114 @@ class PDFParser:
         Returns True if the PDF appears to be a scanned image
         (no selectable text layer found).
         """
-        rsrcmgr = PDFResourceManager()
-        laparams = LAParams()
-        device = PDFPageAggregator(rsrcmgr, laparams=laparams)
-        interpreter = PDFPageInterpreter(rsrcmgr, device)
-
-        total_chars = 0
         try:
-            for page in PDFPage.get_pages(io.BytesIO(file_bytes), maxpages=3):
-                interpreter.process_page(page)
-                layout = device.get_result()
-                for element in layout:
-                    if isinstance(element, LTTextBox):
-                        total_chars += len(element.get_text().strip())
-        except Exception:
-            pass
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                total_chars = 0
+                for page in pdf.pages[:3]:
+                    text = page.extract_text()
+                    if text:
+                        total_chars += len(text.strip())
+                return total_chars < 50
+        except Exception as e:
+            logger.error(f"Error checking scanned PDF: {e}")
+            return True
 
-        return total_chars < 50  # fewer than 50 chars across 3 pages = likely scanned
+    def _group_words_into_lines(self, words: list) -> list:
+        # Sort words by top coordinate, then x0
+        words.sort(key=lambda w: (w['top'], w['x0']))
+        lines = []
+        if not words:
+            return lines
+            
+        current_line = {
+            'text': words[0]['text'],
+            'x0': float(words[0]['x0']),
+            'x1': float(words[0]['x1']),
+            'top': float(words[0]['top']),
+            'bottom': float(words[0]['bottom'])
+        }
+        
+        for w in words[1:]:
+            # If word is on the same line (y difference is small)
+            if abs(w['top'] - current_line['top']) < 5:
+                # Add a space between words
+                current_line['text'] += " " + w['text']
+                current_line['bottom'] = max(current_line['bottom'], float(w['bottom']))
+                current_line['x1'] = max(current_line['x1'], float(w['x1']))
+            else:
+                lines.append(current_line)
+                current_line = {
+                    'text': w['text'],
+                    'x0': float(w['x0']),
+                    'x1': float(w['x1']),
+                    'top': float(w['top']),
+                    'bottom': float(w['bottom'])
+                }
+        lines.append(current_line)
+        return lines
 
     def extract_text(self, file_bytes: bytes) -> str:
         """
-        Main extraction method.
-        Uses coordinate-based column detection for multi-column PDFs.
+        Main extraction method using KMeans column detection.
         """
-        laparams = LAParams(
-            line_margin=0.3,
-            word_margin=0.1,
-            char_margin=1.5,
-            boxes_flow=0.5,
-            detect_vertical=False,
-        )
-
         all_pages_text = []
 
-        for page_layout in extract_pages(io.BytesIO(file_bytes), laparams=laparams):
-            page_width = page_layout.width
-            col_split = page_width * self.column_threshold
-
-            left_col_boxes = []
-            right_col_boxes = []
-            full_width_boxes = []
-
-            for element in page_layout:
-                if not isinstance(element, LTTextBox):
+        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            for page in pdf.pages:
+                # Extract words with bounding boxes
+                words = page.extract_words(x_tolerance=3, y_tolerance=3, keep_blank_chars=True)
+                if not words:
                     continue
-                text = element.get_text().strip()
-                if not text:
+                    
+                lines = self._group_words_into_lines(words)
+                if not lines:
                     continue
-
-                box_x0 = element.x0
-                box_x1 = element.x1
-                box_width = box_x1 - box_x0
-
-                # Decide which column this box belongs to
-                if box_width > page_width * 0.6:
-                    # Wide box spans full width
-                    full_width_boxes.append((element.y1, text))
-                elif box_x1 <= col_split + 20:
-                    left_col_boxes.append((element.y1, text))
-                elif box_x0 >= col_split - 20:
-                    right_col_boxes.append((element.y1, text))
+                    
+                x0_coords = np.array([line['x0'] for line in lines]).reshape(-1, 1)
+                
+                page_width = float(page.width)
+                range_x0 = x0_coords.max() - x0_coords.min()
+                
+                # Determine if page is multi-column based on x0 variance/range
+                if range_x0 > page_width * self.column_threshold and len(lines) > 5:
+                    # 1D KMeans to find 2 columns
+                    kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
+                    labels = kmeans.fit_predict(x0_coords)
+                    centers = kmeans.cluster_centers_.flatten()
+                    
+                    # Ensure cluster 0 is left, cluster 1 is right
+                    if centers[0] > centers[1]:
+                        labels = 1 - labels
+                        
+                    left_lines = [lines[i] for i in range(len(lines)) if labels[i] == 0]
+                    right_lines = [lines[i] for i in range(len(lines)) if labels[i] == 1]
+                    
+                    # Separate out headers that span the whole width (x0 is left, but x1 is far right)
+                    headers = []
+                    pure_left = []
+                    
+                    for l in left_lines:
+                        if l['x1'] > page_width * 0.75:
+                            headers.append(l)
+                        else:
+                            pure_left.append(l)
+                            
+                    # Sort top-to-bottom within each group
+                    headers.sort(key=lambda l: l['top'])
+                    pure_left.sort(key=lambda l: l['top'])
+                    right_lines.sort(key=lambda l: l['top'])
+                    
+                    # Merge logic: Headers -> Left -> Right
+                    page_text_parts = [l['text'] for l in headers] + \
+                                      [l['text'] for l in pure_left] + \
+                                      [l['text'] for l in right_lines]
+                    page_text = "\n".join(page_text_parts)
                 else:
-                    full_width_boxes.append((element.y1, text))
-
-            # Sort each group top-to-bottom (descending y1)
-            full_width_boxes.sort(key=lambda x: -x[0])
-            left_col_boxes.sort(key=lambda x: -x[0])
-            right_col_boxes.sort(key=lambda x: -x[0])
-
-            # Reconstruct reading order: full-width first, then columns side by side
-            page_text_parts = [t for _, t in full_width_boxes]
-
-            if left_col_boxes or right_col_boxes:
-                page_text_parts += [t for _, t in left_col_boxes]
-                page_text_parts += [t for _, t in right_col_boxes]
-
-            all_pages_text.append("\n".join(page_text_parts))
+                    # Single column
+                    lines.sort(key=lambda l: l['top'])
+                    page_text = "\n".join([l['text'] for l in lines])
+                    
+                all_pages_text.append(page_text)
 
         return "\n\n".join(all_pages_text)
 
@@ -385,6 +409,9 @@ class ResumeParser:
             file_type = "unknown"
             warnings.append("⚠️ Unsupported file format. Please upload PDF or DOCX.")
             raw_text = ""
+            
+        if not raw_text.strip():
+            raise ValueError(f"Could not extract any text from {filename}. The file may be empty, an unsupported format (like older .doc), or a scanned image.")
 
         # --- Step 2: Normalize text ---
         normalized_text = self.normalizer.normalize(raw_text)
