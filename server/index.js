@@ -73,8 +73,9 @@ app.use('/api/services', serviceRoutes)
 app.use('/api/tickets', ticketRoutes)
 app.use('/api/announcements', announcementRoutes)
 
+import { authenticate } from './middleware/authMiddleware.js'
 import { getRoles } from './controllers/jobController.js'
-app.get('/api/roles', getRoles)
+app.get('/api/roles', authenticate, getRoles)
 
 // Start Server
 app.listen(PORT, () => {

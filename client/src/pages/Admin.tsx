@@ -63,6 +63,9 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
   const [jobImage, setJobImage] = useState<File | null>(null)
   const [jobImagePreview, setJobImagePreview] = useState<string>('')
   const [jobRemoveImage, setJobRemoveImage] = useState(false)
+  const [jobError, setJobError] = useState('')
+
+  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   const [annTitle, setAnnTitle] = useState('')
   const [annBody, setAnnBody] = useState('')
@@ -152,6 +155,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
   const saveEvent = async () => {
     setEvError('')
     const d = new Date(evDate)
+    if (evDate < todayStr) { setEvError('Event date cannot be in the past'); return }
     const ok = evTitle.trim().length >= 2 && !isNaN(d.getTime()) && evLocation.trim().length >= 2
     if (!ok) { setEvError('Please fill title, a valid date, and location'); return }
     const dateNorm = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10)
@@ -213,8 +217,10 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
   }
 
   const saveJob = async () => {
+    setJobError('')
+    if (jobDeadline < todayStr) { setJobError('Deadline cannot be in the past'); return }
     const ok = jobTitle.trim().length >= 2 && jobCompany.trim().length >= 2 && jobLocation.trim().length >= 2 && jobDeadline
-    if (!ok) return
+    if (!ok) { setJobError('Please fill all fields properly'); return }
     try {
       if (jobEditId == null) {
         const created = await createJob({ title: jobTitle.trim(), company: jobCompany.trim(), location: jobLocation.trim(), link: jobLink.trim(), deadline: jobDeadline, image: jobImage })
@@ -526,7 +532,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Date</label>
-                <input type="date" value={evDate} onChange={e=>setEvDate(e.target.value)} className="w-full rounded-xl bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" />
+                <input type="date" min={todayStr} value={evDate} onChange={e=>setEvDate(e.target.value)} className="w-full rounded-xl bg-white px-4 py-2 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1 ml-1">Time</label>
@@ -601,6 +607,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
       <Modal open={jobOpen} onClose={() => setJobOpen(false)} title={jobEditId == null ? 'Post New Job' : 'Edit Job'} titleClassName="w-full text-center">
         <div className="space-y-4 pt-2">
           <p className="text-center text-sm text-white/60 -mt-2 mb-1">Share a career opportunity</p>
+          {jobError && <div className="rounded-md bg-accent/20 text-accent px-4 py-3 text-sm font-medium border border-red-500/30">{jobError}</div>}
           <div className="space-y-4">
             <div>
                <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1">Job Title</label>
@@ -625,7 +632,7 @@ export default function Admin({ events, jobs, alumniCount, onEventsChanged, data
 
             <div>
                <label className="block text-xs font-bold text-white/70 uppercase tracking-widest mb-1.5 ml-1 text-accent">Last Date to Apply</label>
-               <input type="date" value={jobDeadline} onChange={e=>setJobDeadline(e.target.value)} className="w-full rounded-xl bg-white px-4 py-3 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" />
+               <input type="date" min={todayStr} value={jobDeadline} onChange={e=>setJobDeadline(e.target.value)} className="w-full rounded-xl bg-white px-4 py-3 text-sm text-primary ring-1 ring-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" />
             </div>
           </div>
 

@@ -6,7 +6,7 @@ export function Modal({ open, onClose, title, children, titleClassName = '' }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-[92vw] sm:max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-stone-900 p-4 sm:p-8 transition-all duration-300 shadow-2xl custom-scrollbar">
+      <div className="relative w-full max-w-[92vw] sm:max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/20 bg-gradient-to-br from-[#1e3a8a] to-[#0f172a] p-4 sm:p-8 transition-all duration-300 shadow-2xl custom-scrollbar ring-1 ring-white/10">
         <button aria-label="Close" onClick={onClose} className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all duration-200 z-10">
           <Icon name="close" />
         </button>

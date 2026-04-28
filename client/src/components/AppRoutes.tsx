@@ -107,9 +107,7 @@ export default function AppRoutes({
       <Route
         path="/career"
         element={
-          <CareerSupport/>
-            
-          
+          role ? <CareerSupport /> : <Navigate to="/login" />
         }
       />
       <Route path="/admin" element={

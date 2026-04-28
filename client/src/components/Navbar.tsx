@@ -44,7 +44,7 @@ export default function Navbar({ authed, isAdmin, onOpenLogin, onOpenSignup, onL
               <Link to="/directory" className={linkClass('/directory')}>Directory</Link>
               <Link to="/events" className={linkClass('/events')}>Events</Link>
               <Link to="/jobs" className={linkClass('/jobs')}>Jobs</Link>
-              <Link to="/career" className={linkClass('/career')}>Career Support</Link>
+              {authed && <Link to="/career" className={linkClass('/career')}>Career Support</Link>}
               {isAdmin && <Link to="/admin" className={linkClass('/admin')}>Admin Panel</Link>}
               <Link to="/contact" className={linkClass('/contact')}>Contact</Link>
             </nav>

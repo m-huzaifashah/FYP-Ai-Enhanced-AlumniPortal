@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react'
-import { analyzeResume } from '../api'
-
-const API_BASE =
-  (import.meta as any).env?.VITE_API_URL || '/api'
-const ML_API_BASE =
-  (import.meta as any).env?.VITE_ML_API_URL || 'http://127.0.0.1:8000'
+import { analyzeResume, getRoles, analyzeSkillGapRoleLevel } from '../api'
 
 const LEVELS = [
   { label: 'Intern', value: 'intern' },
@@ -92,26 +87,21 @@ export default function CareerSupport() {
   const [atsError, setAtsError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch(`${API_BASE}/roles`)
-      .then(r => r.json())
+    getRoles()
       .then(d => setRoles(d))
       .catch(() => setSgError('Failed to load roles'))
   }, [])
 
-  // ─── Skill Gap handler (unchanged) ──────────────────────
+  // ─── Skill Gap handler ───────────────────────────────────
   async function analyzeSkillGap() {
     if (!sgFile || !selectedRole || !selectedLevel) {
       setSgError('Please select role, level and upload resume'); return
     }
     setSgError(null); setSgLoading(true); setSgResult(null)
     try {
-      const fd = new FormData()
-      fd.append('resume', sgFile); fd.append('role', selectedRole); fd.append('level', selectedLevel)
-      const res = await fetch(`${ML_API_BASE}/skill-gap/analyze-role-level`, { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok || data.error) throw new Error(data?.error || 'Analysis failed')
+      const data = await analyzeSkillGapRoleLevel(sgFile, selectedRole, selectedLevel)
       setSgResult(data)
-    } catch { setSgError('Skill gap analysis failed') }
+    } catch (e: any) { setSgError(e.message || 'Skill gap analysis failed') }
     finally { setSgLoading(false) }
   }
 
